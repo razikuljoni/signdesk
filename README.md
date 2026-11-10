@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/razikuljoni/signdesk/actions"><img src="https://github.com/razikuljoni/signdesk/actions/workflows/ci.yml/badge.svg" alt="CI Status" /></a>
+  <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Frazikuljoni%2Fsigndesk&root-directory=apps/web"><img src="https://vercel.com/button" alt="Deploy with Vercel" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-22%2B-green.svg" alt="Node.js 22+" /></a>
   <a href="https://nextjs.org/"><img src="https://img.shields.io/badge/Next.js-15%20App%20Router-black.svg" alt="Next.js 15" /></a>
