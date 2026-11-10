@@ -8,7 +8,7 @@ import {
   SignatureCaptureMode,
   AuditAction,
   WebhookEvent,
-} from './enums.js';
+} from './enums';
 
 export const UserSchema = z.object({
   id: z.string().uuid(),
