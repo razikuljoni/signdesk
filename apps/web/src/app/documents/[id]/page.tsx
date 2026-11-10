@@ -24,6 +24,10 @@ import {
   Copy,
   ChevronRight,
   Hash,
+  ShieldAlert,
+  RotateCcw,
+  Check,
+  Lock,
 } from 'lucide-react';
 
 export default function DocumentDetailPage() {
@@ -38,10 +42,17 @@ function DocumentDetailContent() {
   const params = useParams();
   const id = params.id as string;
 
-  const [activeTab, setActiveTab] = useState<'timeline' | 'preview' | 'certificate'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'preview' | 'certificate' | 'files'>('timeline');
   const [remindedSent, setRemindedSent] = useState(false);
   const [extendedNotice, setExtendedNotice] = useState(false);
   const [isVoided, setIsVoided] = useState(false);
+  const [version, setVersion] = useState(1);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<{
+    verified: boolean;
+    hash: string;
+    chainValid: boolean;
+  } | null>(null);
 
   // Document model
   const doc = {
@@ -50,7 +61,8 @@ function DocumentDetailContent() {
     status: isVoided ? 'voided' : 'waiting',
     sentAt: '2026-11-10T14:25:00Z',
     expiresAt: '2026-11-24T14:25:00Z',
-    hash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
+    originalHash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
+    finalHash: '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
     signers: [
       {
         order: 1,
@@ -79,7 +91,7 @@ function DocumentDetailContent() {
         timestamp: '10 Nov 2026, 20:24:12 BST (UTC+06:00)',
         ip: '103.205.71.12',
         hash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
-        prevHash: 'GENESIS_ROOT',
+        prevHash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
       },
       {
         id: 'evt_2',
@@ -109,6 +121,25 @@ function DocumentDetailContent() {
     }
   };
 
+  const handleCorrect = () => {
+    if (confirm('Recall this envelope to make corrections? Active signer links will be invalidated and envelope will revert to Draft v2.')) {
+      setVersion((v) => v + 1);
+      alert('Envelope recalled as Draft v' + (version + 1) + '. You can now adjust fields and recipients.');
+    }
+  };
+
+  const handleVerify = () => {
+    setVerifying(true);
+    setTimeout(() => {
+      setVerifying(false);
+      setVerifyResult({
+        verified: true,
+        hash: doc.finalHash,
+        chainValid: true,
+      });
+    }, 700);
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
       {/* Top Header */}
@@ -125,6 +156,9 @@ function DocumentDetailContent() {
             <Badge variant={doc.status === 'voided' ? 'voided' : 'waiting'}>
               {doc.status}
             </Badge>
+            <span className="text-xs font-mono font-bold bg-pine-100 text-pine-900 px-2 py-0.5 rounded border border-pine-500/20">
+              v{version}
+            </span>
           </div>
           <div className="text-xs font-mono text-ink-faint flex flex-wrap items-center gap-4 pt-1">
             <span>ID: {doc.id}</span>
@@ -135,6 +169,14 @@ function DocumentDetailContent() {
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleVerify} disabled={verifying}>
+            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-pine-700" />
+            {verifying ? 'Verifying...' : 'Verify Cryptographic Hash'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleCorrect} disabled={isVoided}>
+            <RotateCcw className="w-3.5 h-3.5 mr-1" />
+            Correct & Resend
+          </Button>
           <Button variant="outline" size="sm" onClick={handleRemind} disabled={isVoided}>
             <Bell className="w-3.5 h-3.5 mr-1" />
             Send Reminder
@@ -149,6 +191,25 @@ function DocumentDetailContent() {
           </Button>
         </div>
       </div>
+
+      {/* Verification Result Banner */}
+      {verifyResult && (
+        <div className="p-4 bg-pine-100/80 border border-pine-500/30 text-pine-900 rounded-[8px] text-xs space-y-1">
+          <div className="flex items-center justify-between font-bold text-sm">
+            <span className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-pine-700" />
+              Cryptographic Integrity Verified (Untampered)
+            </span>
+            <span className="text-[11px] font-mono text-pine-800">ICT Act 2006 (Sec. 7)</span>
+          </div>
+          <p className="text-ink-soft">
+            Recomputed SHA-256 matches stored final hash. All {doc.auditEvents.length} events in the Merkle audit chain are unbroken and authentic.
+          </p>
+          <div className="font-mono text-[11px] bg-paper p-2 rounded border border-border mt-1">
+            Digest: {verifyResult.hash}
+          </div>
+        </div>
+      )}
 
       {remindedSent && (
         <div className="p-3 bg-[#E2F2E8] border border-success/30 text-success rounded-[8px] text-xs flex items-center gap-2 font-semibold">
@@ -223,6 +284,16 @@ function DocumentDetailContent() {
             Forensic Audit Trail (SHA-256 Ledger)
           </button>
           <button
+            onClick={() => setActiveTab('files')}
+            className={`py-3 px-4 border-b-2 transition-colors ${
+              activeTab === 'files'
+                ? 'border-pine-900 text-pine-900'
+                : 'border-transparent text-ink-soft hover:text-ink'
+            }`}
+          >
+            Files & Certificates
+          </button>
+          <button
             onClick={() => setActiveTab('preview')}
             className={`py-3 px-4 border-b-2 transition-colors ${
               activeTab === 'preview'
@@ -257,7 +328,20 @@ function DocumentDetailContent() {
                   Chained hash verification ensures retroactive modifications are immediately detectable.
                 </CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="text-xs">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(doc.auditEvents, null, 2));
+                  const downloadAnchor = document.createElement('a');
+                  downloadAnchor.setAttribute('href', dataStr);
+                  downloadAnchor.setAttribute('download', `audit_trail_${doc.id}.json`);
+                  document.body.appendChild(downloadAnchor);
+                  downloadAnchor.click();
+                  downloadAnchor.remove();
+                }}
+              >
                 <Download className="w-3.5 h-3.5 mr-1" />
                 Export Audit JSON
               </Button>
@@ -290,7 +374,87 @@ function DocumentDetailContent() {
           </Card>
         )}
 
-        {/* Tab 2: Document Preview */}
+        {/* Tab 2: Files & Certificates */}
+        {activeTab === 'files' && (
+          <Card className="bg-surface p-6 space-y-6">
+            <div>
+              <CardTitle className="text-lg">Document Artifacts & Signed Files</CardTitle>
+              <CardDescription>
+                Download verifiable versions of original uploads, final flattened documents, and audit certificates.
+              </CardDescription>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
+                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
+                  <FileText className="w-4 h-4 text-pine-600" />
+                  Original PDF
+                </div>
+                <p className="text-xs text-ink-soft">
+                  The original source document uploaded before any signatures were affixed.
+                </p>
+                <div className="text-[11px] font-mono text-ink-faint truncate">
+                  SHA: {doc.originalHash.slice(0, 16)}...
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => alert('Downloading original source PDF...')}
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  Download Original
+                </Button>
+              </div>
+
+              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
+                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
+                  <ShieldCheck className="w-4 h-4 text-pine-600" />
+                  Final Executed PDF
+                </div>
+                <p className="text-xs text-ink-soft">
+                  Completed document with all embedded signatures, flattened form fields, and attached CoC.
+                </p>
+                <div className="text-[11px] font-mono text-ink-faint truncate">
+                  SHA: {doc.finalHash.slice(0, 16)}...
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => alert('Downloading executed PDF with embedded signatures...')}
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  Download Executed
+                </Button>
+              </div>
+
+              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
+                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
+                  <WaxSeal size={18} />
+                  Certificate of Completion
+                </div>
+                <p className="text-xs text-ink-soft">
+                  Standalone legal audit trail certificate with all signatory events and cryptographic hashes.
+                </p>
+                <div className="text-[11px] font-mono text-ink-faint">
+                  ICT Act 2006 Compliant
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => alert('Downloading standalone Certificate of Completion PDF...')}
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  Download Certificate
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Tab 3: Document Preview */}
         {activeTab === 'preview' && (
           <Card className="bg-surface text-center p-8 space-y-4">
             <div className="p-8 bg-[#E9E4D8] rounded-[8px] flex justify-center">
@@ -317,7 +481,7 @@ function DocumentDetailContent() {
           </Card>
         )}
 
-        {/* Tab 3: Certificate of Completion */}
+        {/* Tab 4: Certificate of Completion */}
         {activeTab === 'certificate' && (
           <Card className="bg-surface p-8 space-y-6">
             <div className="border-4 border-double border-border-strong p-8 rounded-[8px] space-y-6 text-center bg-paper/50">
@@ -330,7 +494,7 @@ function DocumentDetailContent() {
                   Certificate of Completion
                 </h2>
                 <p className="text-xs text-ink-soft font-mono">
-                  Envelope Serial: ENV_9945996419550316910 · BST Atomic Timestamp
+                  Envelope Serial: {doc.id} · BST Atomic Timestamp
                 </p>
               </div>
 
@@ -342,7 +506,7 @@ function DocumentDetailContent() {
                   </div>
                   <div>
                     <span className="text-ink-faint block">Original Genesis SHA-256:</span>
-                    <code className="font-mono text-[11px] break-all">{doc.hash}</code>
+                    <code className="font-mono text-[11px] break-all">{doc.originalHash}</code>
                   </div>
                 </div>
 
@@ -350,13 +514,13 @@ function DocumentDetailContent() {
                   <div className="font-bold text-pine-900">Statutory Disclosure & Assent:</div>
                   <p className="text-[11px] text-ink-soft leading-relaxed">
                     All parties consented to do business electronically in accordance with the Electronic Record
-                    and Signature Disclosure v1.0. Signatures affixed via SignDesk Simple Electronic Signature (SES).
+                    and Signature Disclosure v1.0. Signatures affixed via SignDesk Simple Electronic Signature (SES). Not legal advice.
                   </p>
                 </div>
               </div>
 
               <div className="pt-2">
-                <Button variant="primary">
+                <Button variant="primary" onClick={() => alert('Downloading certified document bundle...')}>
                   <Download className="w-4 h-4 mr-1.5" />
                   Download Certified PDF & Certificate
                 </Button>

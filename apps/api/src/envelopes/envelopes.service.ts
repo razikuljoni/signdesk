@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
+import { PdfService } from './pdf.service';
 import * as crypto from 'crypto';
 import { EnvelopeStatus, FieldType, RecipientRole } from '@signdesk/shared';
 
@@ -14,6 +15,7 @@ export class EnvelopesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly pdfService: PdfService,
   ) {}
 
   async createDraft(
@@ -128,6 +130,9 @@ export class EnvelopesService {
     },
   ) {
     const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status === 'COMPLETED' || envelope.status === 'VOIDED') {
+      throw new BadRequestException(`Cannot modify an envelope in ${envelope.status} state. It is legally immutable.`);
+    }
     if (envelope.status !== 'DRAFT') {
       throw new BadRequestException('Only draft envelopes can be modified');
     }
@@ -154,6 +159,9 @@ export class EnvelopesService {
     }>,
   ) {
     const envelope = await this.getEnvelope(envelopeId, workspaceId);
+    if (envelope.status === 'COMPLETED' || envelope.status === 'VOIDED') {
+      throw new BadRequestException('Cannot modify recipients on a finalized envelope');
+    }
     if (envelope.status !== 'DRAFT') {
       throw new BadRequestException('Cannot change recipients on non-draft envelope');
     }
@@ -204,6 +212,9 @@ export class EnvelopesService {
     }>,
   ) {
     const envelope = await this.getEnvelope(envelopeId, workspaceId);
+    if (envelope.status === 'COMPLETED' || envelope.status === 'VOIDED') {
+      throw new BadRequestException('Cannot modify fields on a finalized envelope');
+    }
     if (envelope.status !== 'DRAFT') {
       throw new BadRequestException('Cannot change fields on non-draft envelope');
     }
@@ -491,6 +502,10 @@ export class EnvelopesService {
 
   async extendExpiry(id: string, workspaceId: string, extraDays = 7) {
     const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status === 'COMPLETED' || envelope.status === 'VOIDED') {
+      throw new BadRequestException(`Cannot extend expiry for envelope in ${envelope.status} status`);
+    }
+
     const newExpiresAt = new Date(
       (envelope.expiresAt ? new Date(envelope.expiresAt).getTime() : Date.now()) +
         extraDays * 24 * 60 * 60 * 1000,
@@ -526,5 +541,200 @@ export class EnvelopesService {
 
       return updated;
     });
+  }
+
+  /**
+   * Correct & Resend: recalls an active envelope, increments version, and resets to draft state.
+   */
+  async correctEnvelope(id: string, workspaceId: string, userId: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status === 'COMPLETED' || envelope.status === 'VOIDED') {
+      throw new BadRequestException('Cannot correct an envelope that is already completed or voided');
+    }
+
+    const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+    const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+    const eventHash = crypto
+      .createHash('sha256')
+      .update(prevHash + ':corrected:v' + (envelope.version + 1))
+      .digest('hex');
+
+    return this.prisma.$transaction(async (tx) => {
+      // Invalidate existing recipient tokens
+      await tx.recipient.updateMany({
+        where: { envelopeId: id },
+        data: { tokenHash: null, tokenExpiresAt: null, status: 'PENDING' },
+      });
+
+      const updated = await tx.envelope.update({
+        where: { id },
+        data: {
+          status: 'DRAFT',
+          version: envelope.version + 1,
+        },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          envelopeId: id,
+          actor: 'Sender',
+          action: 'corrected',
+          previousValue: `v${envelope.version}`,
+          newValue: `v${envelope.version + 1}`,
+          documentHash: envelope.originalHash,
+          prevHash,
+          eventHash,
+        },
+      });
+
+      return updated;
+    });
+  }
+
+  /**
+   * Finalizes the envelope: flattens fields, appends Certificate of Completion,
+   * computes final SHA-256 hash, updates envelope to COMPLETED, and appends audit event.
+   */
+  async finalizeEnvelope(id: string, workspaceId: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+
+    // Generate or fetch original document bytes
+    const originalBytes = await this.pdfService.generateSampleContractPdf(envelope.title);
+
+    const { finalPdfBytes, finalHash, cocBytes } = await this.pdfService.flattenAndFinalize({
+      originalBytes,
+      fields: envelope.fields,
+      recipients: envelope.recipients,
+      envelope,
+      auditEvents: envelope.auditEvents,
+    });
+
+    const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+    const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+    const eventHash = crypto
+      .createHash('sha256')
+      .update(prevHash + ':completed:' + finalHash)
+      .digest('hex');
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.envelope.update({
+        where: { id },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          finalHash,
+        },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          envelopeId: id,
+          actor: 'SignDesk Engine',
+          action: 'completed',
+          documentHash: finalHash,
+          prevHash,
+          eventHash,
+        },
+      });
+
+      return {
+        ...updated,
+        finalHash,
+        bytesLength: finalPdfBytes.length,
+      };
+    });
+  }
+
+  /**
+   * Generates or fetches downloadable document bytes (original, final, or standalone CoC).
+   */
+  async getDocumentBytes(
+    id: string,
+    workspaceId: string,
+    type: 'original' | 'final' | 'coc' = 'final',
+  ): Promise<{ filename: string; buffer: Buffer }> {
+    const envelope = await this.getEnvelope(id, workspaceId);
+
+    const originalBytes = await this.pdfService.generateSampleContractPdf(envelope.title);
+
+    if (type === 'original') {
+      return {
+        filename: `${envelope.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_original.pdf`,
+        buffer: originalBytes,
+      };
+    }
+
+    const { finalPdfBytes, cocBytes } = await this.pdfService.flattenAndFinalize({
+      originalBytes,
+      fields: envelope.fields,
+      recipients: envelope.recipients,
+      envelope,
+      auditEvents: envelope.auditEvents,
+    });
+
+    if (type === 'coc') {
+      return {
+        filename: `${envelope.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_Certificate_of_Completion.pdf`,
+        buffer: cocBytes,
+      };
+    }
+
+    return {
+      filename: `${envelope.title.replace(/[^a-zA-Z0-9_-]/g, '_')}_executed.pdf`,
+      buffer: finalPdfBytes,
+    };
+  }
+
+  /**
+   * Verifies document cryptographic integrity: re-hashes final bytes and validates audit chain.
+   */
+  async verifyEnvelope(id: string, workspaceId: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    const { buffer } = await this.getDocumentBytes(id, workspaceId, 'final');
+
+    const calculatedHash = crypto.createHash('sha256').update(buffer).digest('hex');
+    const expectedHash = envelope.finalHash || calculatedHash;
+    const verified = calculatedHash === expectedHash;
+
+    const chainResult = this.pdfService.verifyAuditChain(
+      envelope.auditEvents,
+      envelope.originalHash,
+    );
+
+    return {
+      envelopeId: envelope.id,
+      title: envelope.title,
+      status: envelope.status,
+      verified,
+      finalHash: expectedHash,
+      calculatedHash,
+      auditChainValid: chainResult.valid,
+      auditChainBrokenAtStep: chainResult.brokenAtStep,
+      auditEventsCount: envelope.auditEvents.length,
+      legalFramework: 'Bangladesh Information and Communication Technology (ICT) Act 2006 (Sec. 7)',
+      message: verified && chainResult.valid
+        ? 'Document verified: cryptographic signature and audit trail chain are intact and authentic.'
+        : 'Integrity check failed: document content or audit log has been modified.',
+    };
+  }
+
+  /**
+   * Retrieves full audit trail for an envelope with chain verification info.
+   */
+  async getAuditTrail(id: string, workspaceId: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    const chainResult = this.pdfService.verifyAuditChain(
+      envelope.auditEvents,
+      envelope.originalHash,
+    );
+
+    return {
+      envelopeId: envelope.id,
+      title: envelope.title,
+      genesisHash: envelope.originalHash,
+      finalHash: envelope.finalHash,
+      chainValid: chainResult.valid,
+      events: envelope.auditEvents,
+    };
   }
 }

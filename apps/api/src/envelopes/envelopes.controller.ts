@@ -9,7 +9,9 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { EnvelopesService } from './envelopes.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { FieldType } from '@signdesk/shared';
@@ -147,6 +149,61 @@ export class EnvelopesController {
     @Body() body?: { reason?: string },
   ) {
     return this.envelopesService.voidEnvelope(id, req.user.workspaceId, body?.reason);
+  }
+
+  @Post(':id/correct')
+  async correctEnvelope(@Request() req: any, @Param('id') id: string) {
+    return this.envelopesService.correctEnvelope(id, req.user.workspaceId, req.user.userId);
+  }
+
+  @Post(':id/finalize')
+  async finalizeEnvelope(@Request() req: any, @Param('id') id: string) {
+    return this.envelopesService.finalizeEnvelope(id, req.user.workspaceId);
+  }
+
+  @Get(':id/verify')
+  async verifyEnvelope(@Request() req: any, @Param('id') id: string) {
+    return this.envelopesService.verifyEnvelope(id, req.user.workspaceId);
+  }
+
+  @Get(':id/audit-trail')
+  async getAuditTrail(@Request() req: any, @Param('id') id: string) {
+    return this.envelopesService.getAuditTrail(id, req.user.workspaceId);
+  }
+
+  @Get(':id/download')
+  async downloadDocument(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Query('type') type: 'original' | 'final' | 'coc',
+    @Res() res: Response,
+  ) {
+    const { filename, buffer } = await this.envelopesService.getDocumentBytes(
+      id,
+      req.user.workspaceId,
+      type || 'final',
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.end(buffer);
+  }
+
+  @Get(':id/certificate')
+  async downloadCertificate(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const { filename, buffer } = await this.envelopesService.getDocumentBytes(
+      id,
+      req.user.workspaceId,
+      'coc',
+    );
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.end(buffer);
   }
 
   @Post(':id/duplicate')
