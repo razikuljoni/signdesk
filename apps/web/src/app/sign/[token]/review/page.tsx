@@ -1,0 +1,209 @@
+'use client';
+
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Sparkles,
+  ShieldCheck,
+  FileText,
+  ArrowRight,
+  ArrowLeft,
+  ChevronDown,
+  ChevronUp,
+  AlertCircle,
+  Lock,
+} from 'lucide-react';
+
+export default function SignReviewPage() {
+  const params = useParams();
+  const router = useRouter();
+  const token = params.token as string;
+
+  const [aiExpanded, setAiExpanded] = useState(true);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isRahim = token.includes('rahim');
+  const signerName = isRahim ? 'Rahim Chowdhury' : 'Karimul Islam';
+
+  const handleProceed = () => {
+    if (!consentAgreed) {
+      setError('You must agree to electronic records execution under ICT Act 2006 before proceeding.');
+      return;
+    }
+    router.push(`/sign/${token}/sign`);
+  };
+
+  return (
+    <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-6 lg:p-8 space-y-8">
+      {/* Top Header */}
+      <div className="max-w-4xl mx-auto w-full flex items-center justify-between border-b border-border pb-4">
+        <Link href={`/sign/${token}`} className="text-xs font-semibold text-pine-600 hover:underline flex items-center gap-1">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to Overview
+        </Link>
+        <span className="text-xs font-mono text-ink-faint">Step 1 of 2: Assent & Document Review</span>
+      </div>
+
+      <div className="max-w-4xl mx-auto w-full space-y-6">
+        {/* Gemini AI Summary Card (§6.3, Screen 26 from Stitch) */}
+        <Card className="bg-surface border-2 border-pine-600/40 shadow-warm-sm overflow-hidden">
+          <div
+            onClick={() => setAiExpanded(!aiExpanded)}
+            className="p-4 bg-pine-100/60 hover:bg-pine-100 flex items-center justify-between cursor-pointer border-b border-pine-600/20 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-brass-600" />
+              <div>
+                <span className="text-xs font-mono uppercase tracking-wider text-pine-800 font-bold block">
+                  Gemini Plain-Language Contract Brief
+                </span>
+                <span className="text-sm font-bold text-pine-900">
+                  Key Clauses & Obligations Summary (AI-Assisted)
+                </span>
+              </div>
+            </div>
+            <button type="button" className="text-pine-800 p-1">
+              {aiExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {aiExpanded && (
+            <CardContent className="p-6 space-y-4 text-xs">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="p-3 bg-paper rounded border border-border space-y-1">
+                  <span className="font-bold text-pine-900 block">1. Contracting Parties</span>
+                  <p className="text-ink-soft leading-relaxed">
+                    Apex Commerce BD (Disclosing) and Horizon Logistics Ltd (Receiving — represented by {signerName}).
+                  </p>
+                </div>
+
+                <div className="p-3 bg-paper rounded border border-border space-y-1">
+                  <span className="font-bold text-pine-900 block">2. Confidentiality Scope</span>
+                  <p className="text-ink-soft leading-relaxed">
+                    Restricts disclosure of proprietary rate cards, routes, and financial terms for 24 months (§2.1).
+                  </p>
+                </div>
+
+                <div className="p-3 bg-paper rounded border border-border space-y-1">
+                  <span className="font-bold text-pine-900 block">3. Governing Jurisdiction</span>
+                  <p className="text-ink-soft leading-relaxed">
+                    Governed by Bangladesh law. Disputes subject to arbitration in Dhaka under the Arbitration Act 2001 (§8).
+                  </p>
+                </div>
+
+                <div className="p-3 bg-paper rounded border border-border space-y-1">
+                  <span className="font-bold text-pine-900 block">4. Consideration & Remedies</span>
+                  <p className="text-ink-soft leading-relaxed">
+                    Mutual commercial disclosure. Injunctive relief recognized in civil courts of competent jurisdiction (§9).
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-ink-faint italic border-t border-border pt-3">
+                * Note: This plain-language summary is generated by Gemini 1.5 as a reading aid and does not constitute formal legal counsel.
+                Please review the full contract text below before executing.
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Read-Only Document Viewer */}
+        <Card className="bg-surface border-border overflow-hidden">
+          <CardHeader className="bg-surface-raised/50 border-b border-border py-3 px-6 flex flex-row items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-pine-900 font-bold flex items-center gap-1.5">
+              <FileText className="w-4 h-4 text-pine-600" />
+              Document Text (Page 1 of 2)
+            </span>
+            <span className="text-xs text-ink-faint">Standard A4 Format</span>
+          </CardHeader>
+          <CardContent className="p-8 bg-[#E9E4D8] flex justify-center">
+            <div className="w-full max-w-2xl bg-white shadow-warm-md p-8 sm:p-12 text-ink text-xs space-y-4 rounded border border-border">
+              <div className="border-b border-border pb-3 text-center space-y-1">
+                <h3 className="font-bold text-sm text-pine-900 uppercase tracking-wider">
+                  MUTUAL NON-DISCLOSURE AGREEMENT
+                </h3>
+                <p className="text-[11px] text-ink-faint">Under Bangladesh ICT Act 2006</p>
+              </div>
+
+              <p className="leading-relaxed text-ink-soft">
+                This MUTUAL NON-DISCLOSURE AGREEMENT (&quot;Agreement&quot;) is executed and made effective as of the date of
+                digital signature affixed hereto, by and between:
+              </p>
+              <p className="leading-relaxed text-ink-soft pl-4 border-l-2 border-border">
+                <strong>Party A:</strong> Apex Commerce BD, having its principal place of business at Gulshan, Dhaka, Bangladesh; and<br />
+                <strong>Party B:</strong> Horizon Logistics Ltd., having its principal office at Agrabad, Chattogram, Bangladesh.
+              </p>
+              <div className="space-y-2 pt-2 text-[11px] text-ink-soft">
+                <div className="font-bold text-pine-900">1. Confidentiality Obligations</div>
+                <p>
+                  Each party agrees that all commercial, technological, financial, and operational data exchanged
+                  in connection with the proposed logistics venture shall be held in strict confidence.
+                </p>
+                <div className="font-bold text-pine-900 pt-2">2. Term of Obligation</div>
+                <p>
+                  The obligations of non-disclosure shall survive for a period of two (2) calendar years from the date of final signature.
+                </p>
+                <div className="font-bold text-pine-900 pt-2">3. Dispute Resolution</div>
+                <p>
+                  Any controversy or claim arising out of or relating to this Agreement shall be settled by binding arbitration in Dhaka
+                  under the Arbitration Act 2001.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Mandatory Electronic Records Consent Box (§6.3, §13) */}
+        <Card className="bg-surface border-border p-6 space-y-4">
+          {error && (
+            <div className="p-3 bg-danger-bg text-danger border border-danger/30 rounded-[4px] text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-start gap-3">
+            <input
+              id="consent-checkbox"
+              type="checkbox"
+              checked={consentAgreed}
+              onChange={(e) => {
+                setConsentAgreed(e.target.checked);
+                if (e.target.checked) setError(null);
+              }}
+              className="mt-1 h-5 w-5 rounded border-border text-pine-600 focus:ring-pine-500 cursor-pointer"
+            />
+            <label htmlFor="consent-checkbox" className="text-xs text-ink leading-relaxed cursor-pointer select-none">
+              <strong>I agree to do business electronically.</strong> I confirm that I have reviewed the{' '}
+              <span className="text-pine-600 underline">Electronic Record & Signature Disclosure v1.0</span> and intend
+              to execute this document electronically in accordance with the Information and Communication Technology
+              (ICT) Act 2006 (Sections 5, 6, and 7).
+            </label>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-border">
+            <div className="text-xs text-ink-faint flex items-center gap-1.5 font-mono">
+              <ShieldCheck className="w-4 h-4 text-pine-600" />
+              <span>Attribution: {signerName} • Verified Session</span>
+            </div>
+            <Button
+              variant="sign"
+              size="lg"
+              onClick={handleProceed}
+              disabled={!consentAgreed}
+              className="w-full sm:w-auto h-11 font-bold px-8"
+            >
+              Proceed to Guided Signing
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
