@@ -109,4 +109,70 @@ export class MailService {
       magicLink: data.magicLink,
     };
   }
+
+  async sendSigningReminder(data: {
+    to: string;
+    recipientName: string;
+    senderName: string;
+    documentTitle: string;
+    magicLink: string;
+    expiresAt: Date;
+  }) {
+    this.dailyEmailCount++;
+    const formattedExpiry = new Intl.DateTimeFormat('en-GB', {
+      dateStyle: 'medium',
+      timeZone: 'Asia/Dhaka',
+    }).format(data.expiresAt);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: 'Hanken Grotesk', -apple-system, sans-serif; background-color: #FAF7F1; color: #1B1A17; margin: 0; padding: 24px; }
+            .card { background-color: #FFFFFF; max-width: 560px; margin: 0 auto; border-radius: 12px; border: 1px solid #E4DCCB; padding: 32px; box-shadow: 0 4px 16px rgba(27,26,23,0.06); }
+            .header { text-align: center; border-bottom: 1px solid #E4DCCB; padding-bottom: 20px; }
+            .seal { display: inline-block; width: 40px; height: 40px; background-color: #0C2E29; border-radius: 50%; color: #FFFFFF; line-height: 40px; text-align: center; font-weight: bold; font-size: 20px; }
+            .h1 { font-family: 'Newsreader', serif; font-size: 24px; color: #0C2E29; margin-top: 12px; }
+            .btn { display: inline-block; background-color: #0C2E29; color: #FFFFFF; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; font-size: 16px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="header">
+              <div class="seal">•</div>
+              <div class="h1">Friendly Reminder: Signature Pending</div>
+            </div>
+            <div style="padding: 24px 0;">
+              <p>Dear <strong>${data.recipientName}</strong>,</p>
+              <p>This is a reminder that <strong>${data.senderName}</strong> is waiting for your signature on:</p>
+              <div style="background-color: #F3EEE5; border: 1px solid #E4DCCB; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                <div style="font-weight: bold; color: #0C2E29;">${data.documentTitle}</div>
+                <div style="font-size: 12px; color: #57534A; margin-top: 4px;">Expires: <strong>${formattedExpiry}</strong></div>
+              </div>
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${data.magicLink}" class="btn">Sign Now</a>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    if (this.transporter) {
+      try {
+        await this.transporter.sendMail({
+          from: `"SignDesk" <no-reply@signdesk.bd>`,
+          to: data.to,
+          subject: `Reminder: Signature requested for ${data.documentTitle}`,
+          html,
+        });
+      } catch (err: any) {
+        this.logger.warn(`Could not deliver reminder email: ${err.message}`);
+      }
+    }
+
+    return { success: true, deliveredTo: data.to };
+  }
 }
