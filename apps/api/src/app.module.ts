@@ -8,6 +8,7 @@ import { MailModule } from './mail/mail.module';
 import { SigningModule } from './signing/signing.module';
 import { TemplatesModule } from './templates/templates.module';
 import { LifecycleModule } from './lifecycle/lifecycle.module';
+import { DeveloperModule } from './developer/developer.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { LifecycleModule } from './lifecycle/lifecycle.module';
     SigningModule,
     TemplatesModule,
     LifecycleModule,
+    DeveloperModule,
   ],
   controllers: [AppController],
   providers: [],
