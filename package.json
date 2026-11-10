@@ -1,0 +1,20 @@
+{
+  "name": "signdesk-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --parallel --filter @signdesk/* dev",
+    "build": "pnpm --filter @signdesk/shared build && pnpm --filter @signdesk/api build && pnpm --filter @signdesk/web build",
+    "lint": "pnpm --recursive run lint",
+    "typecheck": "pnpm --recursive run typecheck",
+    "test": "pnpm --recursive run test",
+    "test:unit": "pnpm --filter @signdesk/shared test && pnpm --filter @signdesk/api test:unit",
+    "test:api": "pnpm --filter @signdesk/api test:e2e",
+    "db:migrate": "pnpm --filter @signdesk/api db:migrate",
+    "db:seed": "pnpm --filter @signdesk/api db:seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "prettier": "^3.4.2"
+  }
+}

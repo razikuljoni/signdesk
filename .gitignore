@@ -1,0 +1,15 @@
+node_modules
+.pnpm-store
+dist
+.next
+out
+build
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+!.env.example
+.DS_Store
+storage/uploads
+storage/completed

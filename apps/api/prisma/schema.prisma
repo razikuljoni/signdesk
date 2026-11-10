@@ -1,0 +1,269 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum EnvelopeStatus {
+  DRAFT
+  WAITING
+  IN_PROGRESS
+  COMPLETED
+  DECLINED
+  EXPIRED
+  VOIDED
+}
+
+enum RecipientStatus {
+  PENDING
+  NOTIFIED
+  VIEWED
+  SIGNED
+  DECLINED
+  EXPIRED
+}
+
+enum RecipientRole {
+  SIGNER
+  APPROVER
+  VIEWER
+}
+
+enum FieldType {
+  SIGNATURE
+  INITIALS
+  DATE_SIGNED
+  FULL_NAME
+  EMAIL
+  COMPANY
+  TEXT
+  CHECKBOX
+  DROPDOWN
+}
+
+enum WorkspaceRole {
+  ADMIN
+  SENDER
+  VIEWER
+}
+
+enum SignatureCaptureMode {
+  DRAW
+  TYPE
+  UPLOAD
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERED
+  FAILED
+  DISABLED
+}
+
+model User {
+  id              String            @id @default(uuid())
+  name            String
+  email           String            @unique
+  passwordHash    String?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+  memberships     WorkspaceMember[]
+  envelopes       Envelope[]
+}
+
+model Workspace {
+  id                   String            @id @default(uuid())
+  name                 String
+  logoUrl              String?
+  ownerId              String
+  owner                User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  defaultExpiryDays    Int               @default(14)
+  defaultReminderHours Int               @default(48)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  members              WorkspaceMember[]
+  envelopes            Envelope[]
+  templates            Template[]
+  apiKeys              ApiKey[]
+  webhookEndpoints     WebhookEndpoint[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        WorkspaceRole @default(SENDER)
+  invitedAt   DateTime      @default(now())
+  acceptedAt  DateTime?
+
+  @@unique([workspaceId, userId])
+}
+
+model Envelope {
+  id                String          @id @default(uuid())
+  workspaceId       String
+  workspace         Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ownerId           String
+  owner             User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title             String
+  status            EnvelopeStatus  @default(DRAFT)
+  originalPdfUrl    String
+  finalPdfUrl       String?
+  originalHash      String          // SHA-256 of original PDF
+  finalHash         String?         // SHA-256 of completed signed PDF
+  messageToSigners  String?
+  expiresAt         DateTime?
+  sentAt            DateTime?
+  completedAt       DateTime?
+  version           Int             @default(1)
+  deletedAt         DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  recipients        Recipient[]
+  fields            Field[]
+  signatureAssets   SignatureAsset[]
+  auditEvents       AuditEvent[]
+  webhookDeliveries WebhookDelivery[]
+}
+
+model Recipient {
+  id              String          @id @default(uuid())
+  envelopeId      String
+  envelope        Envelope        @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  name            String
+  email           String
+  role            RecipientRole   @default(SIGNER)
+  order           Int             @default(1)
+  status          RecipientStatus @default(PENDING)
+  tokenHash       String?         @unique // Hashed magic-link token
+  tokenExpiresAt  DateTime?
+  signedAt        DateTime?
+  viewedAt        DateTime?
+  declinedReason  String?
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  fields          Field[]
+  signatureAssets SignatureAsset[]
+}
+
+model Field {
+  id           String     @id @default(uuid())
+  envelopeId   String
+  envelope     Envelope   @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  recipientId  String?
+  recipient    Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+  type         FieldType
+  page         Int        // 0-based page index
+  xRatio       Float
+  yRatio       Float
+  wRatio       Float
+  hRatio       Float
+  required     Boolean    @default(true)
+  label        String?
+  placeholder  String?
+  options      Json?      // Dropdown options array
+  value        Json?      // Filled value
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model SignatureAsset {
+  id          String               @id @default(uuid())
+  envelopeId  String
+  envelope    Envelope             @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   Recipient            @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  pngUrl      String
+  captureMode SignatureCaptureMode @default(DRAW)
+  createdAt   DateTime             @default(now())
+}
+
+model AuditEvent {
+  id                String    @id @default(uuid())
+  envelopeId        String
+  envelope          Envelope  @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  eventId           String    @default(uuid())
+  actor             String    // Name/Email/Role
+  action            String    // created, sent, viewed, signed, etc.
+  timestampUtc      DateTime  @default(now())
+  ipAddress         String?
+  userAgent         String?
+  documentHash      String    // SHA-256 at that moment
+  signingOrderStep  Int?
+  fieldId           String?
+  previousValue     String?
+  newValue          String?
+  disclosureVersion String?
+  consent           Boolean?
+  prevHash          String    // SHA-256 hash of previous event (genesis = envelope.originalHash)
+  eventHash         String    // SHA-256(prevHash + JSON(event))
+
+  @@index([envelopeId, timestampUtc])
+}
+
+model Template {
+  id                   String    @id @default(uuid())
+  workspaceId          String
+  workspace            Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name                 String
+  pdfUrl               String
+  fieldLayout          Json      // Role slots Signer 1/2, ratios
+  message              String?
+  defaultExpiryDays    Int?      @default(14)
+  defaultReminderHours Int?      @default(48)
+  useCount             Int       @default(0)
+  lastUsedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model ApiKey {
+  id          String    @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  name        String
+  keyPrefix   String    // sd_live_ or sd_test_
+  keyHash     String    // bcrypt or sha256 hash of full key
+  scopes      Json      // array of scope strings
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model WebhookEndpoint {
+  id          String            @id @default(uuid())
+  workspaceId String
+  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  url         String
+  secretHash  String
+  events      Json              // array of subscribed events
+  enabled     Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  deliveries  WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id          String                @id @default(uuid())
+  endpointId  String
+  endpoint    WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  envelopeId  String
+  envelope    Envelope              @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  event       String
+  payload     Json
+  statusCode  Int?
+  attempts    Int                   @default(0)
+  nextRetryAt DateTime?
+  status      WebhookDeliveryStatus @default(PENDING)
+  createdAt   DateTime              @default(now())
+}

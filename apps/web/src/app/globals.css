@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #FAF7F1;
+  --color-surface: #FFFFFF;
+  --color-surface-raised: #F3EEE5;
+  --color-border: #E4DCCB;
+  --color-border-strong: #CFC3AC;
+  --color-ink: #1B1A17;
+  --color-ink-soft: #57534A;
+  --color-ink-faint: #8A8375;
+
+  --color-pine-950: #08231F;
+  --color-pine-900: #0C2E29;
+  --color-pine-800: #123E37;
+  --color-pine-600: #1B5E52;
+  --color-pine-500: #227A6A;
+  --color-pine-100: #DCEBE6;
+
+  --color-seal-700: #9A2E1E;
+  --color-seal-600: #B3402A;
+  --color-seal-500: #C8502F;
+  --color-seal-100: #F6E3DC;
+
+  --color-brass-600: #9A7B2D;
+  --color-brass-500: #C9A227;
+
+  --color-success: #177245;
+  --color-success-bg: #E2F2E8;
+  --color-warning: #9A6A0A;
+  --color-warning-bg: #FDF3D7;
+  --color-danger: #B42318;
+  --color-danger-bg: #FDECEA;
+  --color-info: #1B5E52;
+
+  --color-dark-bg: #0F1F1C;
+  --color-dark-surface: #162E29;
+  --color-dark-border: #2A453F;
+  --color-dark-text: #F2EEE5;
+
+  --font-display: var(--font-newsreader), Newsreader, serif;
+  --font-body: var(--font-hanken), "Hanken Grotesk", sans-serif;
+  --font-mono: var(--font-jetbrains), "JetBrains Mono", monospace;
+  --font-signature: var(--font-caveat), Caveat, cursive;
+
+  --radius-input: 4px;
+  --radius-button: 8px;
+  --radius-card: 12px;
+  --radius-modal: 12px;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 2px Pine-500 focus outline on interactive elements */
+:focus-visible {
+  outline: 2px solid var(--color-pine-500);
+  outline-offset: 2px;
+}
+
+/* Warm tinted shadows per spec */
+.shadow-warm-sm {
+  box-shadow: 0 1px 2px rgba(27, 26, 23, 0.06);
+}
+
+.shadow-warm-md {
+  box-shadow: 0 4px 16px rgba(27, 26, 23, 0.08);
+}
+
+.shadow-warm-lg {
+  box-shadow: 0 12px 32px rgba(27, 26, 23, 0.12);
+}
