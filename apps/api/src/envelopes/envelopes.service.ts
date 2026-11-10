@@ -323,6 +323,13 @@ export class EnvelopesService {
     userId: string,
     options?: { messageToSigners?: string; expiresDays?: number },
   ) {
+    const member = await this.prisma.workspaceMember.findUnique({
+      where: { workspaceId_userId: { workspaceId, userId } },
+    });
+    if (member && member.role === 'VIEWER') {
+      throw new ForbiddenException('Viewers have read-only access and cannot send envelopes');
+    }
+
     const envelope = await this.getEnvelope(id, workspaceId);
     if (envelope.status !== 'DRAFT') {
       throw new BadRequestException('Only draft envelopes can be sent');
@@ -423,7 +430,16 @@ export class EnvelopesService {
     });
   }
 
-  async voidEnvelope(id: string, workspaceId: string, reason?: string) {
+  async voidEnvelope(id: string, workspaceId: string, reason?: string, userId?: string) {
+    if (userId) {
+      const member = await this.prisma.workspaceMember.findUnique({
+        where: { workspaceId_userId: { workspaceId, userId } },
+      });
+      if (member && member.role === 'VIEWER') {
+        throw new ForbiddenException('Viewers have read-only access and cannot void envelopes');
+      }
+    }
+
     const envelope = await this.getEnvelope(id, workspaceId);
     if (envelope.status === 'COMPLETED') {
       throw new BadRequestException('Completed envelopes are immutable and cannot be voided');

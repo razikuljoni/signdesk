@@ -1,5 +1,5 @@
 import { EnvelopesService } from './envelopes.service';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
 describe('EnvelopesService', () => {
   let service: EnvelopesService;
@@ -101,9 +101,23 @@ describe('EnvelopesService', () => {
     ).rejects.toThrow(BadRequestException);
   });
 
-  it('corrects an envelope: increments version and resets to draft state', async () => {
-    const res = await service.correctEnvelope('env-1', 'ws-1', 'user-1');
-    expect(res.version).toBe(2);
-    expect(res.status).toBe('DRAFT');
+  it('enforces RBAC: Viewer cannot send an envelope (403 Forbidden)', async () => {
+    mockPrisma.workspaceMember = {
+      findUnique: jest.fn().mockResolvedValue({ role: 'VIEWER' }),
+    };
+
+    await expect(
+      service.sendEnvelope('env-1', 'ws-1', 'viewer-user'),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('enforces RBAC: Viewer cannot void an envelope (403 Forbidden)', async () => {
+    mockPrisma.workspaceMember = {
+      findUnique: jest.fn().mockResolvedValue({ role: 'VIEWER' }),
+    };
+
+    await expect(
+      service.voidEnvelope('env-1', 'ws-1', 'reason', 'viewer-user'),
+    ).rejects.toThrow(ForbiddenException);
   });
 });

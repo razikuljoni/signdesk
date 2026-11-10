@@ -148,7 +148,7 @@ export class EnvelopesController {
     @Param('id') id: string,
     @Body() body?: { reason?: string },
   ) {
-    return this.envelopesService.voidEnvelope(id, req.user.workspaceId, body?.reason);
+    return this.envelopesService.voidEnvelope(id, req.user.workspaceId, body?.reason, req.user.userId);
   }
 
   @Post(':id/correct')
