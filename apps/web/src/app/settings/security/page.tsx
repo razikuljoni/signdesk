@@ -2,19 +2,20 @@
 
 import React, { useState } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { SettingsNav } from '@/components/settings/settings-nav';
+import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   ShieldCheck,
   Laptop,
   Smartphone,
   Download,
   Trash2,
-  AlertTriangle,
-  Clock,
-  KeyRound,
+  Lock,
+  Scale,
   CheckCircle2,
+  Clock,
+  HardDrive,
+  Check,
 } from 'lucide-react';
 
 export default function SecuritySettingsPage() {
@@ -29,149 +30,186 @@ function SecuritySettingsContent() {
   const [sessions, setSessions] = useState([
     {
       id: 'sess-1',
-      device: 'MacBook Pro (Chrome 130)',
-      ip: '103.205.71.12 (Dhaka, BD)',
+      device: 'MacBook Pro 16" (Chrome 129 / macOS Sequoia)',
+      ip: '103.25.12.8 (Tejgaon Industrial Area, Dhaka)',
       lastActive: 'Active now (Current session)',
       isCurrent: true,
     },
     {
       id: 'sess-2',
-      device: 'iPhone 15 (Safari Mobile)',
-      ip: '103.145.12.89 (Dhaka, BD)',
-      lastActive: 'Yesterday, 19:40 BST',
+      device: 'iPhone 15 Pro (Mobile Safari 17.5 / iOS 17.5.1)',
+      ip: '103.114.98.24 (Agrabad Commercial Area, Chittagong)',
+      lastActive: '24 Oct 2024, 11:28 BST',
       isCurrent: false,
     },
   ]);
 
   const [revokedNotice, setRevokedNotice] = useState(false);
 
-  const handleRevokeSession = (id: string) => {
-    setSessions(sessions.filter((s) => s.id !== id));
+  const handleRevokeOthers = () => {
+    setSessions(sessions.filter((s) => s.isCurrent));
     setRevokedNotice(true);
     setTimeout(() => setRevokedNotice(false), 3000);
   };
 
-  const handleExportAudit = () => {
-    const auditData = {
-      workspace: 'Apex Commerce BD',
-      exportedAt: new Date().toISOString(),
-      legalFramework: 'Bangladesh Information and Communication Technology (ICT) Act 2006 (Sec. 7)',
-      merkleChainStandard: 'SHA-256 Recursive Digesting',
-      envelopesAudited: 12,
-      tamperingDetected: false,
+  const handleExportVault = () => {
+    const vaultData = {
+      workspace: 'Rahim Textiles & Trade Ltd.',
+      exportDateBST: '24 Oct 2024, 18:00 BST',
+      statutoryStandard: 'Section 7 & 14, Bangladesh ICT Act 2006',
+      totalEnvelopesVaulted: 42,
+      safeHarborExpiry: 'October 2034',
+      rootMerkleDigest: '4e7b819f03c289ad0e6b4129e924a81a02',
     };
-
-    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(auditData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', `signdesk_compliance_audit_${Date.now()}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
-  const handleDeleteWorkspace = () => {
-    const confirmation = prompt('To confirm workspace deletion, type "DELETE APEX COMMERCE BD":');
-    if (confirmation === 'DELETE APEX COMMERCE BD') {
-      alert('Workspace deletion requested. Administrative access revoked.');
-      window.location.href = '/signin';
-    }
+    const dataStr =
+      'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(vaultData, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute('href', dataStr);
+    dlAnchor.setAttribute('download', 'SignDesk_Sovereign_Vault_Ledger.json');
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <div className="min-h-screen bg-paper text-ink font-sans pb-24">
       {/* Header */}
-      <div className="border-b border-border pb-6 space-y-1">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-pine-900">
-          Security & Evidentiary Retention
-        </h1>
-        <p className="text-sm text-ink-soft">
-          Monitor authenticated devices, download cryptographic compliance ledgers, and manage retention policies.
-        </p>
+      <div className="border-b border-border bg-surface px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl font-bold text-pine-900">
+              Workspace Settings
+            </h1>
+            <p className="text-xs text-ink-soft mt-0.5">
+              Device sessions, FIPS HSM cryptographic root, and 10-year statutory safe harbor lock.
+            </p>
+          </div>
+          <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            FIPS 140-2 LEVEL 3 LOCK
+          </span>
+        </div>
       </div>
 
-      {revokedNotice && (
-        <div className="p-4 bg-pine-100 border border-pine-500/20 text-pine-900 rounded-lg text-xs flex items-center gap-2 font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-pine-700" />
-          Remote session successfully revoked.
-        </div>
-      )}
-
-      {/* Active Sessions */}
-      <Card className="bg-surface p-6 space-y-4">
-        <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-          <Laptop className="w-4 h-4 text-pine-600" />
-          Active Authenticated Sessions
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4">
+          <SettingsNav />
         </div>
 
-        <div className="space-y-3">
-          {sessions.map((sess) => (
-            <div key={sess.id} className="p-3 bg-paper rounded border border-border flex items-center justify-between text-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-surface border border-border flex items-center justify-center text-pine-700">
-                  {sess.device.includes('iPhone') ? <Smartphone className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
+        <div className="lg:col-span-8 space-y-6">
+          {/* 10-Year Safe Harbor Lock Card */}
+          <div className="bg-surface rounded-xl border-2 border-brass/50 p-6 shadow-warm space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 rounded-xl bg-brass/15 text-brass-dark shrink-0">
+                  <ShieldCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <strong className="text-pine-900 block">{sess.device}</strong>
-                  <span className="text-[11px] font-mono text-ink-faint">{sess.ip}</span>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-serif font-bold text-base text-pine-900">
+                      10-Year Statutory Safe Harbor Lock
+                    </h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      ACTIVE & SEALED
+                    </span>
+                  </div>
+                  <p className="text-xs text-ink-soft mt-1">
+                    All sealed deeds and associated Merkle block ledgers are mirrored to sovereign cold storage in Dhaka, compliant with Bangladesh Sub-Registry and NBR corporate filing guidelines.
+                  </p>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] text-ink-soft">{sess.lastActive}</span>
-                {!sess.isCurrent && (
-                  <Button variant="outline" size="sm" className="text-xs text-danger hover:bg-danger/10" onClick={() => handleRevokeSession(sess.id)}>
-                    Revoke
-                  </Button>
-                )}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs font-mono">
+              <div className="p-3 rounded-lg bg-paper border border-border">
+                <div className="text-[10px] uppercase text-ink-faint">Retention Period</div>
+                <div className="text-pine-900 font-bold mt-0.5">Until October 2034</div>
+              </div>
+              <div className="p-3 rounded-lg bg-paper border border-border">
+                <div className="text-[10px] uppercase text-ink-faint">Storage Node</div>
+                <div className="text-pine-900 font-bold mt-0.5">Tejgaon Sovereign Cold Vault</div>
+              </div>
+              <div className="p-3 rounded-lg bg-paper border border-border">
+                <div className="text-[10px] uppercase text-ink-faint">Immutability Engine</div>
+                <div className="text-emerald-800 font-bold mt-0.5">WORM (Write Once, Read Many)</div>
               </div>
             </div>
-          ))}
-        </div>
-      </Card>
 
-      {/* Statutory Data Retention */}
-      <Card className="bg-surface p-6 space-y-4">
-        <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-pine-600" />
-          Statutory Evidentiary Retention (ICT Act 2006)
-        </div>
-
-        <p className="text-xs text-ink-soft leading-relaxed">
-          Under Bangladesh evidentiary standards, completed contract records, embedded signature assets, and SHA-256 Merkle audit chains are immutably archived for a mandatory minimum of 3 years.
-        </p>
-
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div>
-            <span className="text-xs font-bold text-pine-900 block">Export Master Audit Trail</span>
-            <span className="text-[11px] text-ink-faint">Download cryptographically signed JSON ledger of all workspace activities.</span>
+            <div className="pt-2 border-t border-border flex items-center justify-between">
+              <button
+                onClick={handleExportVault}
+                className="px-4 py-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-xs font-semibold shadow-warm transition-all flex items-center gap-2"
+              >
+                <Download className="w-3.5 h-3.5 text-brass" />
+                <span>Export Complete Cryptographic JSON Ledger</span>
+              </button>
+            </div>
           </div>
 
-          <Button variant="outline" size="default" onClick={handleExportAudit}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Compliance JSON
-          </Button>
-        </div>
-      </Card>
+          {/* Active Sessions Table */}
+          <div className="bg-surface rounded-xl border border-border overflow-hidden shadow-subtle">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <div>
+                <h3 className="font-serif font-bold text-sm text-pine-900">
+                  Active Cryptographic Device Sessions
+                </h3>
+                <p className="text-[11px] text-ink-soft">
+                  Terminals currently holding authenticated tokens for this workspace.
+                </p>
+              </div>
 
-      {/* Danger Zone */}
-      <Card className="bg-[#FFF8F7] border border-danger/30 p-6 space-y-4">
-        <div className="font-bold text-danger text-sm border-b border-danger/20 pb-2 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-danger" />
-          Danger Zone
-        </div>
+              <button
+                onClick={handleRevokeOthers}
+                className="px-3 py-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-vermilion text-xs font-semibold shadow-subtle transition-all"
+              >
+                Revoke Other Sessions
+              </button>
+            </div>
 
-        <p className="text-xs text-ink-soft">
-          Deleting a workspace immediately invalidates all active drafts and revoked links. Completed documents remain preserved in immutable cold archive per statutory ICT Act requirements.
-        </p>
+            {revokedNotice && (
+              <div className="p-3 bg-emerald-50 border-b border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2">
+                <Check className="w-4 h-4 text-emerald-700" />
+                <span>All secondary sessions have been securely terminated.</span>
+              </div>
+            )}
 
-        <div className="pt-2">
-          <Button variant="destructive" size="default" onClick={handleDeleteWorkspace} className="font-bold">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Workspace & Member Access
-          </Button>
+            <div className="divide-y divide-border">
+              {sessions.map((sess) => (
+                <div
+                  key={sess.id}
+                  className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-paper border border-border text-pine-900">
+                      {sess.device.includes('iPhone') ? (
+                        <Smartphone className="w-4 h-4" />
+                      ) : (
+                        <Laptop className="w-4 h-4" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-pine-900 flex items-center gap-2">
+                        <span>{sess.device}</span>
+                        {sess.isCurrent && (
+                          <span className="px-2 py-0.2 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                            THIS DEVICE
+                          </span>
+                        )}
+                      </div>
+                      <div className="font-mono text-[11px] text-ink-faint mt-0.5">
+                        IP: {sess.ip}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-right font-mono text-[11px] text-ink-soft">
+                    {sess.lastActive}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

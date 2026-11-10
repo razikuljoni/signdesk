@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { AuthGuard } from '@/components/auth-guard';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { SettingsNav } from '@/components/settings/settings-nav';
+import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Building2,
-  Palette,
-  Clock,
-  CheckCircle2,
+  Save,
+  Check,
   Upload,
+  Download,
   ShieldCheck,
+  Scale,
+  Receipt,
+  FileCheck2,
 } from 'lucide-react';
 
 export default function WorkspaceSettingsPage() {
@@ -25,179 +25,178 @@ export default function WorkspaceSettingsPage() {
 }
 
 function WorkspaceSettingsContent() {
-  const [workspaceName, setWorkspaceName] = useState('Apex Commerce BD');
-  const [brandColor, setBrandColor] = useState<'#0C2E29' | '#B3402A'>('#0C2E29');
-  const [defaultExpiry, setDefaultExpiry] = useState(14);
-  const [defaultReminder, setDefaultReminder] = useState(48);
-  const [saved, setSaved] = useState(false);
+  const [entityName, setEntityName] = useState('Rahim Textiles & Trade Ltd.');
+  const [rjscNumber, setRjscNumber] = useState('C-84920/2014 (RJSC Dhaka Sadar)');
+  const [etin, setEtin] = useState('8492048192-BD');
+  const [binVat, setBinVat] = useState('002918401-0101');
+  const [savedNotice, setSavedNotice] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 2500);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
+    <div className="min-h-screen bg-paper text-ink font-sans pb-24">
       {/* Header */}
-      <div className="border-b border-border pb-6 space-y-1">
-        <h1 className="font-display text-2xl sm:text-3xl font-bold text-pine-900">
-          Workspace & Branding Settings
-        </h1>
-        <p className="text-sm text-ink-soft">
-          Customize organization identity, signing portal appearance, and default execution timeouts.
-        </p>
-      </div>
-
-      {saved && (
-        <div className="p-4 bg-pine-100 border border-pine-500/20 text-pine-900 rounded-lg text-xs flex items-center gap-2 font-semibold">
-          <CheckCircle2 className="w-4 h-4 text-pine-700" />
-          Workspace settings updated successfully.
-        </div>
-      )}
-
-      <form onSubmit={handleSave} className="space-y-6">
-        {/* Organization Identity */}
-        <Card className="bg-surface p-6 space-y-4">
-          <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-pine-600" />
-            Organization Identity
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="wsName" className="text-xs">Company / Workspace Legal Name</Label>
-            <Input
-              id="wsName"
-              required
-              value={workspaceName}
-              onChange={(e) => setWorkspaceName(e.target.value)}
-              className="text-xs"
-            />
-          </div>
-
-          <div className="space-y-2 pt-2">
-            <Label className="text-xs">Organization Seal & Logo</Label>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-surface-raised border border-dashed border-border flex items-center justify-center text-xs text-ink-faint">
-                Logo
-              </div>
-              <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => alert('Logo upload is enabled.')}>
-                <Upload className="w-3.5 h-3.5 mr-1" />
-                Upload Brand PNG
-              </Button>
-            </div>
-            <p className="text-[11px] text-ink-faint">
-              Your logo will appear in signatory email invitations, signer portal headers, and on the Certificate of Completion.
+      <div className="border-b border-border bg-surface px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl font-bold text-pine-900">
+              Workspace Settings
+            </h1>
+            <p className="text-xs text-ink-soft mt-0.5">
+              Corporate entity details, tax identification, and corporate embossment.
             </p>
           </div>
-        </Card>
-
-        {/* Brand Theme Constraints (§15) */}
-        <Card className="bg-surface p-6 space-y-4">
-          <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-            <Palette className="w-4 h-4 text-pine-600" />
-            Signer Portal Accent Theme (Strictly Constrained)
-          </div>
-
-          <p className="text-xs text-ink-soft">
-            To ensure WCAG AAA evidentiary legibility and trust under the Bangladesh ICT Act 2006, brand accents in MVP are strictly constrained to Deep Pine or Wax Seal Vermilion.
-          </p>
-
-          <div className="grid sm:grid-cols-2 gap-4 pt-1">
-            <label
-              className={`p-4 rounded-lg border cursor-pointer flex items-center justify-between transition-all ${
-                brandColor === '#0C2E29'
-                  ? 'border-pine-900 bg-pine-100/50 ring-2 ring-pine-900/10'
-                  : 'border-border bg-paper hover:bg-surface-raised'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="brandColor"
-                  value="#0C2E29"
-                  checked={brandColor === '#0C2E29'}
-                  onChange={() => setBrandColor('#0C2E29')}
-                  className="accent-pine-900"
-                />
-                <div>
-                  <strong className="text-xs text-pine-900 block">Deep Pine (Default)</strong>
-                  <span className="text-[11px] font-mono text-ink-faint">#0C2E29 • Heritage & Trust</span>
-                </div>
-              </div>
-              <div className="w-6 h-6 rounded-full bg-[#0C2E29]" />
-            </label>
-
-            <label
-              className={`p-4 rounded-lg border cursor-pointer flex items-center justify-between transition-all ${
-                brandColor === '#B3402A'
-                  ? 'border-seal-600 bg-seal-100/50 ring-2 ring-seal-600/10'
-                  : 'border-border bg-paper hover:bg-surface-raised'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="brandColor"
-                  value="#B3402A"
-                  checked={brandColor === '#B3402A'}
-                  onChange={() => setBrandColor('#B3402A')}
-                  className="accent-seal-600"
-                />
-                <div>
-                  <strong className="text-xs text-pine-900 block">Wax Seal Vermilion</strong>
-                  <span className="text-[11px] font-mono text-ink-faint">#B3402A • Evidentiary Attestation</span>
-                </div>
-              </div>
-              <div className="w-6 h-6 rounded-full bg-[#B3402A]" />
-            </label>
-          </div>
-        </Card>
-
-        {/* Default Lifecycle Settings */}
-        <Card className="bg-surface p-6 space-y-4">
-          <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-pine-600" />
-            Default Envelope Timing Defaults
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="defExpiry" className="text-xs">Default Expiry Days</Label>
-              <Input
-                id="defExpiry"
-                type="number"
-                min="1"
-                max="90"
-                value={defaultExpiry}
-                onChange={(e) => setDefaultExpiry(Number(e.target.value))}
-                className="text-xs"
-              />
-              <span className="text-[11px] text-ink-faint block">Signing links expire automatically after this duration.</span>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="defRemind" className="text-xs">Reminder Interval (Hours)</Label>
-              <Input
-                id="defRemind"
-                type="number"
-                min="24"
-                max="168"
-                value={defaultReminder}
-                onChange={(e) => setDefaultReminder(Number(e.target.value))}
-                className="text-xs"
-              />
-              <span className="text-[11px] text-ink-faint block">Automated gentle reminder email sent to active signers.</span>
-            </div>
-          </div>
-        </Card>
-
-        <div className="flex justify-end pt-2">
-          <Button type="submit" variant="primary" size="default" className="font-bold">
-            Save Workspace Changes
-          </Button>
+          <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            RJSC DHAKA VERIFIED
+          </span>
         </div>
-      </form>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4">
+          <SettingsNav />
+        </div>
+
+        <div className="lg:col-span-8 space-y-6">
+          <form onSubmit={handleSave} className="bg-surface rounded-xl border border-border p-6 shadow-subtle space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div>
+                <h2 className="font-serif font-bold text-base text-pine-900">
+                  Workspace & Registered Entity
+                </h2>
+                <p className="text-xs text-ink-soft">
+                  Corporate profile legally bound to all dispatched contracts.
+                </p>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] font-mono text-ink-faint">
+                <Scale className="w-3.5 h-3.5 text-brass-dark" />
+                <span>Companies Act 1994</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div className="sm:col-span-2">
+                <label className="block text-ink font-medium mb-1">
+                  Registered Legal Entity Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={entityName}
+                  onChange={(e) => setEntityName(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs font-semibold focus:outline-none focus:border-pine-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-ink font-medium mb-1">
+                  RJSC Incorporation Reference
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={rjscNumber}
+                  onChange={(e) => setRjscNumber(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs font-mono focus:outline-none focus:border-pine-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-ink font-medium mb-1">
+                  National Board of Revenue (e-TIN)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={etin}
+                  onChange={(e) => setEtin(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs font-mono focus:outline-none focus:border-pine-900"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-ink font-medium mb-1">
+                  VAT Registration / BIN (Mushak-6.3 Compatible)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={binVat}
+                  onChange={(e) => setBinVat(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs font-mono focus:outline-none focus:border-pine-900"
+                />
+              </div>
+            </div>
+
+            {/* Corporate Seal Crest Asset */}
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-xs text-pine-900">
+                    Official Corporate Seal Asset
+                  </div>
+                  <div className="text-[11px] text-ink-soft">
+                    Circular seal crest automatically overlaid onto executed Annexure and stamp blocks.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="px-2.5 py-1 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold flex items-center gap-1"
+                >
+                  <Download className="w-3.5 h-3.5 text-ink-soft" />
+                  <span>Export SVG</span>
+                </button>
+              </div>
+
+              <div className="p-6 rounded-xl bg-paper border border-border flex items-center justify-center gap-6">
+                <div className="w-24 h-24 rounded-full border-4 border-pine-900 bg-surface flex flex-col items-center justify-center text-center p-2 shadow-sm">
+                  <div className="text-[7px] font-mono font-bold text-pine-900 uppercase">
+                    Rahim Textiles & Trade
+                  </div>
+                  <WaxSeal size={28} className="my-0.5" />
+                  <div className="text-[6px] font-mono text-ink-faint">
+                    REG: DHAKA • 2014
+                  </div>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="font-semibold text-pine-900">
+                    Vector Seal Crest Active
+                  </div>
+                  <div className="text-[11px] text-ink-soft">
+                    Gold and deep pine heraldic ring conforming to DCCI commercial standards.
+                  </div>
+                  <label className="inline-block mt-1 text-[11px] font-semibold text-pine-800 hover:underline cursor-pointer">
+                    Replace Seal Vector (SVG/PNG)
+                    <input type="file" className="hidden" accept="image/*" />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3">
+              {savedNotice && (
+                <span className="text-xs font-mono text-emerald-800 font-semibold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Workspace Details Saved!</span>
+                </span>
+              )}
+
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-xs font-bold shadow-warm transition-all flex items-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5 text-brass" />
+                <span>Save Workspace</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

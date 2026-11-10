@@ -1,14 +1,19 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
+import React, { useState } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { PenTool, Type, Upload, CheckCircle2, RotateCcw, Shield } from 'lucide-react';
+import { SettingsNav } from '@/components/settings/settings-nav';
+import { WaxSeal } from '@/components/ui/wax-seal';
+import {
+  User,
+  Mail,
+  Clock,
+  ShieldCheck,
+  PenTool,
+  Save,
+  Check,
+  Lock,
+} from 'lucide-react';
 
 export default function ProfileSettingsPage() {
   return (
@@ -19,308 +24,158 @@ export default function ProfileSettingsPage() {
 }
 
 function ProfileSettingsContent() {
+  const [fullName, setFullName] = useState('Ayesha Rahman');
+  const [roleTitle, setRoleTitle] = useState('Managing Director');
+  const email = 'ayesha.rahman@rahimtraders.com';
+  const [timezone, setTimezone] = useState('Asia/Dhaka (BST UTC+06:00)');
+  const [savedNotice, setSavedNotice] = useState(false);
 
-  const { user, workspace } = useAuth();
-  const [name, setName] = useState(user?.name || 'Tanvir Ahmed');
-  const [email] = useState(user?.email || 'demo@signdesk.bd');
-  const [timezone, setTimezone] = useState('Asia/Dhaka');
-  const [activeTab, setActiveTab] = useState<'draw' | 'type' | 'upload'>('draw');
-  const [typedName, setTypedName] = useState(name);
-  const [selectedStyle, setSelectedStyle] = useState(0);
-  const [savedSignature, setSavedSignature] = useState<string | null>(null);
-  const [isSavedMessage, setIsSavedMessage] = useState(false);
-
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-
-  useEffect(() => {
-    if (user?.name) {
-      setName(user.name);
-      setTypedName(user.name);
-    }
-  }, [user]);
-
-  // Canvas drawing handlers
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    setIsDrawing(true);
-    const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
-    ctx.beginPath();
-    ctx.moveTo(clientX - rect.left, clientY - rect.top);
-  };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#0C2E29'; // Deep pine ink
-    ctx.lineTo(clientX - rect.left, clientY - rect.top);
-    ctx.stroke();
-  };
-
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
-
-  const clearCanvas = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-  };
-
-  const handleAdoptSignature = () => {
-    if (activeTab === 'draw') {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        setSavedSignature(canvas.toDataURL('image/png'));
-      }
-    } else if (activeTab === 'type') {
-      // Create off-screen canvas to render script font as PNG
-      const offCanvas = document.createElement('canvas');
-      offCanvas.width = 400;
-      offCanvas.height = 120;
-      const ctx = offCanvas.getContext('2d');
-      if (ctx) {
-        ctx.font = '48px Caveat, cursive';
-        ctx.fillStyle = '#0C2E29';
-        ctx.fillText(typedName, 20, 75);
-        setSavedSignature(offCanvas.toDataURL('image/png'));
-      }
-    }
-    setIsSavedMessage(true);
-    setTimeout(() => setIsSavedMessage(false), 3000);
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavedNotice(true);
+    setTimeout(() => setSavedNotice(false), 2500);
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10 md:py-14 space-y-8">
+    <div className="min-h-screen bg-paper text-ink font-sans pb-24">
       {/* Header */}
-      <div className="border-b border-border pb-6 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-mono uppercase tracking-widest text-ink-faint">
-            Workspace Account Settings
-          </span>
-          <h1 className="font-display text-3xl font-bold text-pine-900 mt-1">
-            Sender Profile & Signature
-          </h1>
+      <div className="border-b border-border bg-surface px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="font-serif text-2xl font-bold text-pine-900">
+              Workspace Settings
+            </h1>
+            <p className="text-xs text-ink-soft mt-0.5">
+              Manage your legal signatory identity, team governance, and statutory vault.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-mono text-ink-faint">
+            <Lock className="w-3.5 h-3.5 text-brass-dark" />
+            <span>FIPS 140-2 Level 3 Enclave</span>
+          </div>
         </div>
-        <Badge variant="verified">
-          Role: {workspace?.role || 'ADMIN'}
-        </Badge>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Profile Info Card */}
-        <Card className="bg-surface">
-          <CardHeader>
-            <CardTitle>Personal Details</CardTitle>
-            <CardDescription>
-              Your name and email appear on envelope invitations and Certificates of Completion.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="name">Full Legal Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  setTypedName(e.target.value);
-                }}
-              />
-            </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Settings Navigation Rail */}
+        <div className="lg:col-span-4">
+          <SettingsNav />
+        </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email Address</Label>
-              <Input id="email" value={email} disabled className="bg-surface-raised opacity-80" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="timezone">Default Legal Timezone</Label>
-              <select
-                id="timezone"
-                value={timezone}
-                onChange={(e) => setTimezone(e.target.value)}
-                className="flex h-10 w-full rounded-[4px] border border-border bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine-500"
-              >
-                <option value="Asia/Dhaka">Asia/Dhaka (BST UTC+06:00) — Standard Bangladesh</option>
-                <option value="UTC">UTC (Coordinated Universal Time)</option>
-                <option value="Asia/Singapore">Asia/Singapore (SGT UTC+08:00)</option>
-              </select>
-            </div>
-          </CardContent>
-          <CardFooter>
-            <Button variant="primary">
-              Save Profile Details
-            </Button>
-          </CardFooter>
-        </Card>
-
-        {/* Saved Signature Card */}
-        <Card className="bg-surface">
-          <CardHeader>
-            <CardTitle>Saved Signature Asset</CardTitle>
-            <CardDescription>
-              Create your default digital signature stamp for quick one-click signing.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Signature Mode Tabs */}
-            <div className="flex border-b border-border text-sm">
-              <button
-                type="button"
-                onClick={() => setActiveTab('draw')}
-                className={`flex-1 py-2 font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-                  activeTab === 'draw'
-                    ? 'border-pine-900 text-pine-900'
-                    : 'border-transparent text-ink-soft hover:text-ink'
-                }`}
-              >
-                <PenTool className="w-4 h-4" />
-                Draw
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('type')}
-                className={`flex-1 py-2 font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-                  activeTab === 'type'
-                    ? 'border-pine-900 text-pine-900'
-                    : 'border-transparent text-ink-soft hover:text-ink'
-                }`}
-              >
-                <Type className="w-4 h-4" />
-                Type
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('upload')}
-                className={`flex-1 py-2 font-semibold flex items-center justify-center gap-1.5 border-b-2 transition-colors ${
-                  activeTab === 'upload'
-                    ? 'border-pine-900 text-pine-900'
-                    : 'border-transparent text-ink-soft hover:text-ink'
-                }`}
-              >
-                <Upload className="w-4 h-4" />
-                Upload
-              </button>
-            </div>
-
-            {/* Tab 1: Draw */}
-            {activeTab === 'draw' && (
-              <div className="space-y-2">
-                <div className="border border-border rounded-[8px] bg-white relative overflow-hidden">
-                  <canvas
-                    ref={canvasRef}
-                    width={380}
-                    height={140}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                    className="w-full h-36 cursor-crosshair touch-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={clearCanvas}
-                    className="absolute top-2 right-2 text-xs font-semibold text-ink-faint hover:text-danger bg-surface/80 p-1.5 rounded flex items-center gap-1 shadow-sm"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Clear
-                  </button>
-                </div>
-                <p className="text-[11px] text-ink-faint text-center">
-                  Use mouse, stylus, or touchscreen to draw your signature.
-                </p>
-              </div>
-            )}
-
-            {/* Tab 2: Type */}
-            {activeTab === 'type' && (
-              <div className="space-y-3">
-                <Input
-                  value={typedName}
-                  onChange={(e) => setTypedName(e.target.value)}
-                  placeholder="Type your name"
-                />
-                <div className="p-4 bg-white border border-border rounded-[8px] text-center min-h-[100px] flex items-center justify-center">
-                  <span className="font-signature text-4xl text-pine-900">
-                    {typedName || 'Your Signature'}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Tab 3: Upload */}
-            {activeTab === 'upload' && (
-              <div className="border-2 border-dashed border-border rounded-[8px] p-6 text-center space-y-2 bg-surface-raised">
-                <Upload className="w-6 h-6 text-ink-soft mx-auto" />
+        {/* Content Area */}
+        <div className="lg:col-span-8 space-y-6">
+          <form onSubmit={handleSave} className="bg-surface rounded-xl border border-border p-6 shadow-subtle space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div>
+                <h2 className="font-serif font-bold text-base text-pine-900">
+                  Profile & Legal Identity
+                </h2>
                 <p className="text-xs text-ink-soft">
-                  Upload an image of your signature (PNG or JPG, max 2MB).
+                  Authoritative credentials bound to your electronic signature marks.
                 </p>
+              </div>
+              <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                NID VERIFIED
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block text-ink font-medium mb-1">Full Legal Name</label>
                 <input
-                  type="file"
-                  accept="image/png, image/jpeg"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (re) => {
-                        setSavedSignature(re.target?.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                  className="text-xs text-ink-faint"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs font-semibold focus:outline-none focus:border-pine-900"
                 />
               </div>
-            )}
 
-            {savedSignature && (
-              <div className="p-3 bg-surface-raised rounded border border-border space-y-1">
-                <span className="text-[11px] font-semibold text-pine-900">Current Saved Signature:</span>
-                <img
-                  src={savedSignature}
-                  alt="Saved signature"
-                  className="max-h-16 mx-auto object-contain"
+              <div>
+                <label className="block text-ink font-medium mb-1">Designated Title / Role</label>
+                <input
+                  type="text"
+                  required
+                  value={roleTitle}
+                  onChange={(e) => setRoleTitle(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs focus:outline-none focus:border-pine-900"
                 />
               </div>
-            )}
 
-            {isSavedMessage && (
-              <div className="p-2 bg-[#E2F2E8] text-success rounded text-xs flex items-center justify-center gap-1.5 font-semibold">
-                <CheckCircle2 className="w-4 h-4" />
-                Signature adopted & saved to profile!
+              <div className="sm:col-span-2">
+                <label className="block text-ink font-medium mb-1">Primary Corporate Email</label>
+                <input
+                  type="email"
+                  disabled
+                  value={email}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper/60 text-ink-soft text-xs font-mono cursor-not-allowed"
+                />
+                <div className="text-[10px] text-ink-faint mt-1">
+                  Corporate domain identity verified by SignDesk DNS validation.
+                </div>
               </div>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button variant="sign" onClick={handleAdoptSignature} className="w-full">
-              Adopt & Save Signature
-            </Button>
-          </CardFooter>
-        </Card>
+
+              <div className="sm:col-span-2">
+                <label className="block text-ink font-medium mb-1">Operational Timezone</label>
+                <input
+                  type="text"
+                  disabled
+                  value={timezone}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper/60 text-ink-soft text-xs font-mono cursor-not-allowed"
+                />
+                <div className="text-[10px] text-ink-faint mt-1">
+                  Enforces atomic BST (UTC+06:00) NTP timestamping on all execution logs.
+                </div>
+              </div>
+            </div>
+
+            {/* Saved Signature Specimen */}
+            <div className="pt-4 border-t border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-semibold text-xs text-pine-900">
+                    Saved Signature Specimen
+                  </div>
+                  <div className="text-[11px] text-ink-soft">
+                    Archival Caveat script specimen permanently bound to your PKI keypair.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="px-2.5 py-1 rounded-lg border border-border bg-paper hover:bg-surface text-pine-900 text-xs font-semibold"
+                >
+                  Update Glyph
+                </button>
+              </div>
+
+              <div className="p-6 rounded-xl bg-paper border border-border text-center space-y-2">
+                <div className="font-caveat text-4xl text-pine-900 py-2">
+                  {fullName}
+                </div>
+                <div className="font-mono text-[10px] text-ink-faint">
+                  PKI Hash: 99a8b1e4c7d0d04c4ae79cbff91b29a00184762ec04 • Issued: Oct 2024
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3">
+              {savedNotice && (
+                <span className="text-xs font-mono text-emerald-800 font-semibold flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Profile Changes Saved!</span>
+                </span>
+              )}
+
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-xs font-bold shadow-warm transition-all flex items-center gap-1.5"
+              >
+                <Save className="w-3.5 h-3.5 text-brass" />
+                <span>Save Profile</span>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
