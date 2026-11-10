@@ -88,6 +88,14 @@ export function Nav() {
                 Pricing
               </Link>
               <Link
+                href="/templates"
+                className={`hover:text-pine-900 transition-colors ${
+                  pathname === '/templates' ? 'text-pine-900 font-semibold' : ''
+                }`}
+              >
+                Templates
+              </Link>
+              <Link
                 href="/legal"
                 className={`hover:text-pine-900 transition-colors ${
                   pathname === '/legal' ? 'text-pine-900 font-semibold' : ''
@@ -101,7 +109,7 @@ export function Nav() {
                   pathname === '/security' ? 'text-pine-900 font-semibold' : ''
                 }`}
               >
-                Security & Merkle Audit
+                Security & Audit
               </Link>
             </>
           )}
@@ -223,6 +231,13 @@ export function Nav() {
                   className="px-3 py-2 text-sm font-medium text-ink hover:bg-surface-raised rounded"
                 >
                   Pricing
+                </Link>
+                <Link
+                  href="/templates"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 text-sm font-medium text-ink hover:bg-surface-raised rounded"
+                >
+                  Templates
                 </Link>
                 <Link
                   href="/legal"
