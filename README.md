@@ -77,40 +77,47 @@ SignDesk/
 │       └── ci.yml               # Automated CI (lint, typecheck, unit, integration)
 │
 ├── apps/
-│   ├── web/                     # Next.js 15 App Router Frontend
+│   ├── web/                     # Next.js 15 App Router Frontend (27 Stitch Screens)
 │   │   ├── src/app/
-│   │   │   ├── page.tsx         # Public marketing landing page
-│   │   │   ├── pricing/         # Pricing tiers & BDT payment disclosure
-│   │   │   ├── legal/           # ICT Act 2006 legal compliance page
-│   │   │   ├── security/        # Merkle hash inspector & verification tool
-│   │   │   ├── signin/          # Sender authentication
-│   │   │   ├── signup/          # Workspace onboarding registration
-│   │   │   ├── dashboard/       # Sender dashboard & pending approvals
-│   │   │   ├── documents/       # Documents repository & audit ledgers
-│   │   │   │   └── [id]/        # Document detail, CoC tab & files download
+│   │   │   ├── page.tsx         # [Screen 1] Public Marketing Landing Page
+│   │   │   ├── signin/          # [Screen 2] Sender Authentication (PKI-bound)
+│   │   │   ├── signup/          # [Screen 3] Workspace Onboarding Registration
+│   │   │   ├── dashboard/       # [Screen 4] Executive Workspace Dashboard
 │   │   │   ├── envelopes/
-│   │   │   │   ├── new/         # Multi-page PDF upload & SHA-256 ingestion
-│   │   │   │   ├── [id]/prepare # 3-zone visual field editor & zoom canvas
-│   │   │   │   └── sent/        # Success attestation screen
-│   │   │   ├── sign/[token]/    # Signer Portal (No account required)
-│   │   │   │   ├── page.tsx     # Signer landing & trust bar
-│   │   │   │   ├── review/      # Consent & Gemini AI contract summary
-│   │   │   │   ├── sign/        # Guided canvas & Draw/Type/Upload modal
-│   │   │   │   ├── done/        # Execution receipt & SHA-256 copy button
-│   │   │   │   ├── declined/    # Recorded decline state & reason
-│   │   │   │   ├── expired/     # Expiration notification & re-request CTA
-│   │   │   │   ├── voided/      # Voided certificate state
-│   │   │   │   └── already-signed/ # Duplicate signature prevention
-│   │   │   ├── templates/       # 6 starter BD SME contract templates
-│   │   │   │   └── [id]/use     # 1-click instantiate flow
-│   │   │   └── settings/
-│   │   │       ├── profile/     # Personal signature drawer
-│   │   │       ├── team/        # Team seats & RBAC (Admin, Sender, Viewer)
-│   │   │       ├── workspace/   # Brand settings (Pine/Seal only)
-│   │   │       ├── billing/     # 5 envelopes/mo cap & Resend daily counter
-│   │   │       ├── security/    # Active sessions & audit export
-│   │   │       └── developer/   # API keys & HMAC webhooks
-│   │   └── src/components/ui/   # Accessible shadcn/Radix components
+│   │   │   │   ├── new/         # [Screen 5] PDF Ingestion & In-Memory Genesis Hash
+│   │   │   │   ├── [id]/prepare # [Screen 6] 3-Zone Field Placement Studio
+│   │   │   │   ├── prepare/recipients # [Screen 7] Recipient Config & Dispatch
+│   │   │   │   └── sent/        # [Screen 8] Envelope Sent Confirmation & Wax Seal
+│   │   │   ├── documents/
+│   │   │   │   ├── page.tsx     # [Screen 10] All Documents Table & Filters
+│   │   │   │   ├── [id]/        # [Screen 9] Document Detail & Signer Chain
+│   │   │   │   │   ├── audit/   # [Screen 11A] Forensic Audit Trail & Merkle Chain
+│   │   │   │   │   └── certificate/ # [Screen 11B] Official Certificate of Completion
+│   │   │   ├── sign/[token]/    # Public Signer Chamber (Zero-Account Required)
+│   │   │   │   ├── page.tsx     # Signer Landing & Welcome Attestation
+│   │   │   │   ├── review/      # [Screen 12] Signer Welcome & AI Summary Review
+│   │   │   │   ├── sign/        # [Screen 13] Guided Signing Canvas & Signature Adoption Modal
+│   │   │   │   ├── done/        # [Screen 14] Signer Ceremony Done Receipt
+│   │   │   │   ├── voided/      # [Screen 15A] Envelope Voided Revocation State
+│   │   │   │   ├── expired/     # [Screen 15B] Signing Link Expired Notice
+│   │   │   │   ├── declined/    # [Screen 16A] Envelope Declined Rejection Record
+│   │   │   │   └── already-signed/ # [Screen 16B] Already Signed Attestation
+│   │   │   ├── templates/       # [Screen 17] Standardized Templates Repository
+│   │   │   │   ├── [id]/        # [Screen 18A] Template Editor & Coordinate Studio
+│   │   │   │   │   └── use/     # [Screen 18B] Template Use & Variables Injection
+│   │   │   ├── onboarding/      # [Screen 19] Sender Onboarding Journey
+│   │   │   ├── settings/        # Workspace Settings Suite
+│   │   │   │   ├── profile/     # [Screen 20] Profile & Legal Signatory Identity
+│   │   │   │   ├── workspace/   # [Screen 21] Workspace & Registered Entity Details
+│   │   │   │   ├── team/        # [Screen 22] Team Governance & Signatory Seats
+│   │   │   │   ├── developer/   # [Screen 23] Production API Keys & Webhooks
+│   │   │   │   ├── billing/     # [Screen 24A] Billing & NBR Mushak-6.3 Tax Invoices
+│   │   │   │   └── security/    # [Screen 24B] Active Sessions & 10-Yr Safe Harbor
+│   │   │   ├── pricing/         # [Screen 25] Transparent Pricing (BDT & Local Gateways)
+│   │   │   ├── legal/           # [Screen 26] Legal Enforceability under ICT Act 2006
+│   │   │   ├── security/        # [Screen 27] Cryptographic Architecture & SHA-256
+│   │   │   └── not-found.tsx    # [Error] 404 Instrument Not Found (Broken Seal Motif)
+│   │   └── src/components/ui/   # Design tokens (Paper, Deep Pine, Vermilion, Brass)
 │   │
 │   └── api/                     # NestJS Enterprise Backend
 │       ├── prisma/
