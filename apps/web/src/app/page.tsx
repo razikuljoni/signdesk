@@ -52,19 +52,19 @@ export default function LandingPage() {
   const faqs = [
     {
       q: 'Is an e-signature executed on SignDesk legally binding in Bangladesh?',
-      a: 'Yes. Under Sections 5, 6, and 7 of the Information and Communication Technology (ICT) Act 2006, electronic records and electronic signatures have legal validity and cannot be denied admissibility in court solely because they are in electronic format. SignDesk generates Simple Electronic Signatures (SES) backed by tamper-evident hash chaining and atomic BST timestamps.',
+      a: 'Yes. Under Section 7 of the Bangladesh Information and Communication Technology (ICT) Act, 2006 (amended 2013), where any law provides that information or any other matter shall be authenticated by affixing a signature, that requirement is satisfied if authenticated by means of an electronic signature. SignDesk provides cryptographic verification satisfying Section 8 regarding legal recognition of electronic records in high courts and arbitration tribunals.',
     },
     {
       q: 'What forensic details are permanently recorded in the Audit Trail?',
-      a: 'Every signing event logs the signer’s verified email, IP address, device user-agent, Bangladesh Standard Time (BST, UTC+06:00), and a SHA-256 cryptographic hash chaining all preceding events into an immutable tamper-evident ledger appended to the Certificate of Completion.',
+      a: 'Every completed envelope generates an immutable Certificate of Completion. It records: chronological UTC/BST timestamps, IP addresses, geolocations, authentication handshakes, browser user-agents, cryptographic SHA-256 document digests, and signer signature vectors. This trail cannot be edited or purged, ensuring foolproof evidentiary weight.',
     },
     {
       q: 'Do external signers or vendor suppliers need to register for SignDesk?',
-      a: 'No. Signers receive a single-use secure magic link via email. They can review the contract, read the Gemini AI summary, and execute their signature without creating an account or installing any software.',
+      a: 'No. Signers can open their personalized secure magic link from any mobile device, tablet, or desktop web browser without creating an account or downloading an app. They verify identity via secure email token and sign smoothly in less than 30 seconds.',
     },
     {
       q: 'Can I pay subscription charges in Bangladeshi Taka (BDT)?',
-      a: 'Yes. SignDesk supports local billing in BDT (৳) and provides automated Mushak-6.3 VAT invoices compliant with the National Board of Revenue (NBR).',
+      a: 'Absolutely. We support direct local billing in BDT (৳) and corporate invoices. All invoices include registered BIN numbers and automated Mushak 6.3 challans for NBR corporate tax audits.',
     },
   ];
 
