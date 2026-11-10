@@ -6,6 +6,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
 import { EnvelopesModule } from './envelopes/envelopes.module';
 import { MailModule } from './mail/mail.module';
 import { SigningModule } from './signing/signing.module';
+import { TemplatesModule } from './templates/templates.module';
 
 @Module({
   imports: [
@@ -15,11 +16,9 @@ import { SigningModule } from './signing/signing.module';
     EnvelopesModule,
     MailModule,
     SigningModule,
+    TemplatesModule,
   ],
   controllers: [AppController],
   providers: [],
 })
 export class AppModule {}
-
-
-
