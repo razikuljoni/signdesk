@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { Newsreader, Hanken_Grotesk, JetBrains_Mono, Caveat } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/lib/auth-context';
+import { Nav } from '@/components/nav';
+import { Footer } from '@/components/footer';
 
 const newsreader = Newsreader({
   subsets: ['latin'],
@@ -46,8 +49,12 @@ export default function RootLayout({
       lang="en"
       className={`${newsreader.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} ${caveat.variable}`}
     >
-      <body className="bg-paper text-ink font-body min-h-screen antialiased">
-        {children}
+      <body className="bg-paper text-ink font-body min-h-screen flex flex-col antialiased">
+        <AuthProvider>
+          <Nav />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
