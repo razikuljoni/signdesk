@@ -22,6 +22,11 @@ export class WorkspacesController {
     return this.workspacesService.getWorkspace(req.user.workspaceId, req.user.userId);
   }
 
+  @Get('current/usage')
+  async getUsage(@Request() req: any) {
+    return this.workspacesService.getWorkspaceUsage(req.user.workspaceId);
+  }
+
   @Patch('current')
   async updateCurrent(
     @Request() req: any,

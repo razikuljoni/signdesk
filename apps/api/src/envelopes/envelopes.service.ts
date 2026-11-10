@@ -30,6 +30,23 @@ export class EnvelopesService {
     },
   ) {
     return this.prisma.$transaction(async (tx) => {
+      // Phase 10: Free Tier Quota Check (5 envelopes / month per §14)
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const monthlyCount = await tx.envelope.count({
+        where: {
+          workspaceId,
+          createdAt: { gte: startOfMonth },
+          deletedAt: null,
+        },
+      });
+
+      if (monthlyCount >= 5) {
+        throw new BadRequestException(
+          'Monthly free quota reached: You have created 5 of 5 allowed envelopes for this calendar month. Upgrade your plan to send more envelopes.',
+        );
+      }
+
       const envelope = await tx.envelope.create({
         data: {
           workspaceId,

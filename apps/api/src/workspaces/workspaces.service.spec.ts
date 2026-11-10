@@ -24,7 +24,19 @@ describe('WorkspacesService (Phase 8 - Team Management & RBAC)', () => {
       },
     };
 
-    service = new WorkspacesService(mockPrisma);
+    const mockMail = {
+      getQuotaStatus: jest.fn().mockReturnValue({
+        sentToday: 22,
+        dailyCap: 100,
+        remaining: 78,
+      }),
+    };
+
+    mockPrisma.envelope = {
+      count: jest.fn().mockResolvedValue(3),
+    };
+
+    service = new WorkspacesService(mockPrisma, mockMail as any);
   });
 
   it('allows Admin to invite a new team member', async () => {
@@ -88,5 +100,13 @@ describe('WorkspacesService (Phase 8 - Team Management & RBAC)', () => {
     await expect(
       service.removeMember('ws-1', 'admin-id', 'mem-admin'),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('reports accurate free-tier usage and daily email quota', async () => {
+    const usage = await service.getWorkspaceUsage('ws-1');
+    expect(usage.plan).toBe('FREE');
+    expect(usage.envelopesUsedThisMonth).toBe(3);
+    expect(usage.envelopesRemaining).toBe(2);
+    expect(usage.resendDailyNotice).toBe('78/100 emails left today');
   });
 });

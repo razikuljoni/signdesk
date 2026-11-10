@@ -5,11 +5,15 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import { WorkspaceRole } from '@signdesk/shared';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async getWorkspace(workspaceId: string, userId: string) {
     const member = await this.prisma.workspaceMember.findUnique({
@@ -202,5 +206,31 @@ export class WorkspacesService {
     return this.prisma.workspace.delete({
       where: { id: workspaceId },
     });
+  }
+
+  async getWorkspaceUsage(workspaceId: string) {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const monthlyCount = await this.prisma.envelope.count({
+      where: {
+        workspaceId,
+        createdAt: { gte: startOfMonth },
+        deletedAt: null,
+      },
+    });
+
+    const mailQuota = this.mailService.getQuotaStatus();
+
+    return {
+      plan: 'FREE',
+      envelopesUsedThisMonth: monthlyCount,
+      envelopesMonthlyLimit: 5,
+      envelopesRemaining: Math.max(0, 5 - monthlyCount),
+      emailsSentToday: mailQuota.sentToday,
+      emailsDailyLimit: mailQuota.dailyCap,
+      emailsRemainingToday: mailQuota.remaining,
+      resendDailyNotice: `${mailQuota.remaining}/100 emails left today`,
+    };
   }
 }

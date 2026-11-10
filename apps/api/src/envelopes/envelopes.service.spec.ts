@@ -24,6 +24,7 @@ describe('EnvelopesService', () => {
       $transaction: jest.fn(async (cb) => {
         return cb({
           envelope: {
+            count: jest.fn().mockResolvedValue(0),
             create: jest.fn().mockResolvedValue({
               id: 'env-1',
               title: 'Mutual NDA',
@@ -109,6 +110,24 @@ describe('EnvelopesService', () => {
     await expect(
       service.sendEnvelope('env-1', 'ws-1', 'viewer-user'),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('enforces free tier monthly cap: blocks the 6th envelope in a month with clear message', async () => {
+    mockPrisma.$transaction = jest.fn(async (cb) => {
+      return cb({
+        envelope: {
+          count: jest.fn().mockResolvedValue(5), // 5 already used
+        },
+      });
+    });
+
+    await expect(
+      service.createDraft('user-1', 'ws-1', {
+        title: '6th Envelope Attempt',
+        originalPdfUrl: '/samples/doc.pdf',
+        originalHash: 'hash-6th',
+      }),
+    ).rejects.toThrow(BadRequestException);
   });
 
   it('enforces RBAC: Viewer cannot void an envelope (403 Forbidden)', async () => {
