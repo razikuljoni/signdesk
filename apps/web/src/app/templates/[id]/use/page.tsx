@@ -4,21 +4,24 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth-guard';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   FileText,
   Users,
   Send,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Calendar,
   Clock,
   ShieldCheck,
   Mail,
+  Scale,
+  Sparkles,
+  Phone,
+  Building2,
+  Lock,
+  Check,
 } from 'lucide-react';
 
 export default function UseTemplatePage() {
@@ -32,190 +35,306 @@ export default function UseTemplatePage() {
 function UseTemplateContent() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = (params.id as string) || 'commercial-supply';
 
-  const templateName = 'Mutual Non-Disclosure Agreement (NDA)';
+  // Role 2 inputs
+  const [signer2Name, setSigner2Name] = useState('Tanvir Ahmed');
+  const [signer2Email, setSigner2Email] = useState('tanvir@meghnadist.com');
+  const [signer2Phone, setSigner2Phone] = useState('+880 1711-884920');
+  const [mandate2FA, setMandate2FA] = useState(true);
 
-  // Form states
-  const [docTitle, setDocTitle] = useState('Mutual Non-Disclosure Agreement — Horizon Logistics');
-  const [message, setMessage] = useState('Please review and execute our standard commercial mutual NDA.');
-  const [expiryDays, setExpiryDays] = useState(14);
+  // Role 3 inputs
+  const [witnessName, setWitnessName] = useState('Advocate Kamal Uddin');
+  const [witnessEmail, setWitnessEmail] = useState('legal@dcibar.org.bd');
 
-  // Role signatories
-  const [party1Name, setParty1Name] = useState('Tanvir Ahmed');
-  const [party1Email, setParty1Email] = useState('tanvir@apex-commerce.bd');
+  // Variables
+  const [contractValue, setContractValue] = useState('৳ 1,450,000 BDT');
+  const [deliveryTimeline, setDeliveryTimeline] = useState('30 Days FOB Chittagong Port Zone');
+  const [customNote, setCustomNote] = useState(
+    'Please review the bilateral supply deed. Clause 14 indemnity is aligned with standard 5% cap.'
+  );
 
-  const [party2Name, setParty2Name] = useState('Rahim Chowdhury');
-  const [party2Email, setParty2Email] = useState('rahim@horizon-logistics.bd');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [isSending, setIsSending] = useState(false);
-
-  const handleSendFromTemplate = (e: React.FormEvent) => {
+  const handleDispatch = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSending(true);
-
-    // Save newly instantiated envelope to localStorage demo store
-    const newEnvelope = {
-      id: 'env_' + Math.random().toString(36).substring(2, 9),
-      title: docTitle,
-      status: 'waiting',
-      createdAt: new Date().toISOString(),
-      recipients: [
-        { name: party1Name, email: party1Email, role: 'Disclosing Party', status: 'signed' },
-        { name: party2Name, email: party2Email, role: 'Receiving Party', status: 'notified' },
-      ],
-      progress: 50,
-      sourceTemplate: templateName,
-    };
-
-    const existing = JSON.parse(localStorage.getItem('signdesk_envelopes') || '[]');
-    localStorage.setItem('signdesk_envelopes', JSON.stringify([newEnvelope, ...existing]));
-
+    setIsSubmitting(true);
     setTimeout(() => {
       router.push('/envelopes/sent');
     }, 600);
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-      {/* Header */}
-      <div className="space-y-1 border-b border-border pb-6">
-        <Link href="/templates" className="text-xs font-semibold text-pine-600 hover:underline flex items-center gap-1">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Templates
-        </Link>
-        <div className="pt-2">
-          <span className="text-xs font-mono uppercase tracking-wider text-pine-700 bg-pine-100 px-2 py-0.5 rounded font-semibold border border-pine-500/20">
-            Instant 1-Click Send
-          </span>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-pine-900 mt-2">
-            Send from Template: {templateName}
-          </h1>
-          <p className="text-sm text-ink-soft mt-1">
-            Assign the two signatory roles below. Pre-placed fields and legal compliance settings are applied automatically without touching the canvas.
-          </p>
+    <div className="min-h-screen bg-paper text-ink font-sans pb-24">
+      {/* Top Header & Stepper */}
+      <div className="border-b border-border bg-surface px-6 py-4">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/templates/${id}`}
+              className="p-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold flex items-center gap-1 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Specimen</span>
+            </Link>
+
+            <div>
+              <div className="font-serif font-bold text-lg text-pine-900">
+                Deploy Specimen: Commercial Supply Agreement
+              </div>
+              <div className="text-[11px] font-mono text-ink-faint">
+                Template #TPL-BD-COMM-2024 • Section 7 ICT Act Compliant
+              </div>
+            </div>
+          </div>
+
+          {/* 3-Step Stepper Header */}
+          <div className="flex items-center gap-2 text-xs font-medium">
+            <div className="flex items-center gap-1 text-emerald-800 font-semibold">
+              <span className="w-5 h-5 rounded-full bg-emerald-700 text-paper text-[10px] flex items-center justify-center font-bold">
+                ✓
+              </span>
+              <span>1. Select Template</span>
+            </div>
+            <span className="text-ink-faint">›</span>
+            <div className="flex items-center gap-1 text-pine-900 font-bold">
+              <span className="w-5 h-5 rounded-full bg-pine-900 text-paper text-[10px] flex items-center justify-center font-bold">
+                2
+              </span>
+              <span>2. Assign Recipient Roles</span>
+            </div>
+            <span className="text-ink-faint">›</span>
+            <div className="flex items-center gap-1 text-ink-faint">
+              <span className="w-5 h-5 rounded-full bg-paper border border-border text-ink-faint text-[10px] flex items-center justify-center">
+                3
+              </span>
+              <span>3. Review & Dispatch</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSendFromTemplate} className="space-y-6">
-        {/* Document Details */}
-        <Card className="bg-surface p-6 space-y-4">
-          <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-pine-600" />
-            Envelope Information
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="docTitle" className="text-xs">Document Title</Label>
-            <Input
-              id="docTitle"
-              required
-              value={docTitle}
-              onChange={(e) => setDocTitle(e.target.value)}
-              className="text-xs"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="message" className="text-xs">Message to Signatories</Label>
-            <textarea
-              id="message"
-              rows={2}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full text-xs p-2.5 rounded-md border border-border bg-surface focus:outline-none focus:border-pine-600"
-            />
-          </div>
-        </Card>
-
-        {/* Signatory Roles Assignment */}
-        <Card className="bg-surface p-6 space-y-6">
-          <div className="font-bold text-pine-900 text-sm border-b border-border pb-2 flex items-center gap-2">
-            <Users className="w-4 h-4 text-pine-600" />
-            Fill Signatory Roles
-          </div>
-
-          {/* Role 1 */}
-          <div className="p-4 bg-paper rounded-[8px] border border-border space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-pine-900">
-                Role 1: Disclosing Party Signatory
-              </span>
-              <Badge variant="draft" className="text-[10px]">
-                Pre-placed Signature & Date
-              </Badge>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-ink-faint">Full Legal Name</Label>
-                <Input
-                  required
-                  value={party1Name}
-                  onChange={(e) => setParty1Name(e.target.value)}
-                  className="text-xs h-9"
-                />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Form Column (8 cols) */}
+        <form onSubmit={handleDispatch} className="lg:col-span-8 space-y-6">
+          {/* Role Assignment Configuration Cards */}
+          <div className="bg-surface rounded-xl border border-border p-6 shadow-subtle space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <div className="font-serif font-bold text-base text-pine-900">
+                Signatory Hierarchy & Roles
               </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-ink-faint">Corporate Email</Label>
-                <Input
-                  type="email"
-                  required
-                  value={party1Email}
-                  onChange={(e) => setParty1Email(e.target.value)}
-                  className="text-xs h-9 font-mono"
-                />
+              <span className="text-xs font-mono text-ink-faint">Sequential Protocol Enforced</span>
+            </div>
+
+            {/* Role 1 (Supplier / Originator) */}
+            <div className="p-4 rounded-xl bg-paper border border-border space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase font-bold text-pine-900">
+                  Role 1: Supplier / Originator (First Signer)
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  VERIFIED NID (#***-***-5521)
+                </span>
+              </div>
+              <div className="font-bold text-sm text-pine-900">Ayesha Rahman</div>
+              <div className="text-xs text-ink-soft">
+                Managing Director, Rahim Textiles & Trade Ltd. • ayesha.rahman@rahimtrade.com.bd
               </div>
             </div>
+
+            {/* Role 2 (Buyer / Counterparty) */}
+            <div className="p-4 rounded-xl border-2 border-vermilion/50 bg-vermilion/5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase font-bold text-vermilion">
+                  Role 2: Buyer / Counterparty (Designated Signer)
+                </span>
+                <span className="text-[10px] font-mono text-ink-faint">Action Pending Turn</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block text-ink font-medium mb-1">Full Legal Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={signer2Name}
+                    onChange={(e) => setSigner2Name(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-border bg-surface text-ink text-xs focus:outline-none focus:border-pine-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-ink font-medium mb-1">Corporate Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={signer2Email}
+                    onChange={(e) => setSigner2Email(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-border bg-surface text-ink text-xs focus:outline-none focus:border-pine-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-ink font-medium mb-1">WhatsApp Mobile (OTP Delivery)</label>
+                  <input
+                    type="text"
+                    required
+                    value={signer2Phone}
+                    onChange={(e) => setSigner2Phone(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-border bg-surface text-ink text-xs font-mono focus:outline-none focus:border-pine-900"
+                  />
+                </div>
+
+                <div className="flex items-center">
+                  <label className="flex items-center gap-2 cursor-pointer pt-4">
+                    <input
+                      type="checkbox"
+                      checked={mandate2FA}
+                      onChange={(e) => setMandate2FA(e.target.checked)}
+                      className="rounded text-pine-900 focus:ring-pine-900/30"
+                    />
+                    <span className="text-xs font-semibold text-pine-900">
+                      Mandate Porichoy NID 2FA Verification
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Role 3 (Witness / Legal Custodian) */}
+            <div className="p-4 rounded-xl bg-paper border border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase font-bold text-brass-dark">
+                  Role 3: Witness / Legal Custodian (Observer CC)
+                </span>
+                <span className="text-[10px] font-mono text-ink-faint">
+                  Receives sealed duplicate upon completion
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block text-ink font-medium mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={witnessName}
+                    onChange={(e) => setWitnessName(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-border bg-surface text-ink text-xs focus:outline-none focus:border-pine-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-ink font-medium mb-1">Corporate Email</label>
+                  <input
+                    type="email"
+                    value={witnessEmail}
+                    onChange={(e) => setWitnessEmail(e.target.value)}
+                    className="w-full p-2 rounded-lg border border-border bg-surface text-ink text-xs focus:outline-none focus:border-pine-900"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Role 2 */}
-          <div className="p-4 bg-paper rounded-[8px] border border-border space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-pine-900">
-                Role 2: Receiving Party Signatory
-              </span>
-              <Badge variant="draft" className="text-[10px]">
-                Pre-placed Signature & Date
-              </Badge>
+          {/* Contract Variables Injection Panel */}
+          <div className="bg-surface rounded-xl border border-border p-6 shadow-subtle space-y-4">
+            <div className="font-serif font-bold text-base text-pine-900 pb-2 border-b border-border">
+              Contract Variables Injection
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-[11px] text-ink-faint">Full Legal Name</Label>
-                <Input
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block text-ink font-medium mb-1">
+                  Variable 1: Consideration Value
+                </label>
+                <input
+                  type="text"
                   required
-                  value={party2Name}
-                  onChange={(e) => setParty2Name(e.target.value)}
-                  className="text-xs h-9"
+                  value={contractValue}
+                  onChange={(e) => setContractValue(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-border bg-paper text-ink text-xs font-semibold focus:outline-none focus:border-pine-900"
                 />
               </div>
-              <div className="space-y-1">
-                <Label className="text-[11px] text-ink-faint">Corporate Email</Label>
-                <Input
-                  type="email"
+
+              <div>
+                <label className="block text-ink font-medium mb-1">
+                  Variable 2: Delivery Timeline & Incoterm
+                </label>
+                <input
+                  type="text"
                   required
-                  value={party2Email}
-                  onChange={(e) => setParty2Email(e.target.value)}
-                  className="text-xs h-9 font-mono"
+                  value={deliveryTimeline}
+                  onChange={(e) => setDeliveryTimeline(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-border bg-paper text-ink text-xs focus:outline-none focus:border-pine-900"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-ink font-medium mb-1">
+                  Variable 3: Custom Greeting & Instruction Note
+                </label>
+                <textarea
+                  rows={2}
+                  value={customNote}
+                  onChange={(e) => setCustomNote(e.target.value)}
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink text-xs focus:outline-none focus:border-pine-900"
                 />
               </div>
             </div>
           </div>
-        </Card>
+        </form>
 
-        {/* Submit Actions */}
-        <div className="flex items-center justify-between pt-2">
-          <Link href="/templates">
-            <Button type="button" variant="outline" size="default">
-              Cancel
-            </Button>
-          </Link>
+        {/* Right Summary & Dispatch Sidebar (4 cols) */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-surface rounded-xl border border-border p-5 shadow-subtle space-y-4 sticky top-20">
+            <div className="font-serif font-bold text-sm text-pine-900 pb-2 border-b border-border">
+              Envelope Manifest Summary
+            </div>
 
-          <Button type="submit" variant="primary" size="default" disabled={isSending} className="font-bold">
-            <Send className="w-4 h-4 mr-2" />
-            {isSending ? 'Dispatching...' : 'Instantiate & Send Envelope'}
-          </Button>
+            {/* Document Thumbnail Preview */}
+            <div className="p-4 rounded-xl bg-paper border border-border text-center space-y-2">
+              <WaxSeal size={40} className="mx-auto" />
+              <div className="font-serif font-bold text-xs text-pine-900">
+                Commercial Supply Agreement
+              </div>
+              <div className="text-[10px] font-mono text-ink-faint">
+                2 Pages • 3 Signatories • 6 Anchored Fields
+              </div>
+            </div>
+
+            {/* Compliance Guarantee */}
+            <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
+              <div className="font-semibold flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <span>ICT Act Section 7 Sealed</span>
+              </div>
+              <p className="text-[11px] text-emerald-800">
+                Deterministic SHA-256 Pre-calculated. Admissible in Bangladesh commercial courts without witness subpoena.
+              </p>
+            </div>
+
+            <div className="text-[11px] font-mono text-ink-soft space-y-1">
+              <div className="flex justify-between">
+                <span className="text-ink-faint">Stamp Duty Ref:</span>
+                <span className="text-pine-900 font-semibold">TR-DH-882914</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-ink-faint">Expiry TTL:</span>
+                <span className="text-pine-900 font-semibold">14 Days (BST)</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleDispatch}
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 rounded-xl bg-pine-900 hover:bg-pine-800 disabled:opacity-50 text-paper text-xs font-bold shadow-warm transition-all flex items-center justify-center gap-2"
+            >
+              <span>{isSubmitting ? 'Sealing & Dispatching...' : 'Review & Send Envelope'}</span>
+              <ArrowRight className="w-4 h-4 text-brass" />
+            </button>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
