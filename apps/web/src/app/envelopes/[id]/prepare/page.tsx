@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
   PenTool,
   Calendar,
@@ -27,14 +26,24 @@ import {
   Send,
   AlertTriangle,
   ArrowLeft,
-  ChevronDown,
+  ArrowRight,
   Clock,
   Sparkles,
   Undo2,
   Shield,
-  Move,
+  ShieldCheck,
+  CheckCircle2,
+  Stamp,
+  Fingerprint,
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  RotateCw,
+  Save,
+  BrainCircuit,
+  Lock
 } from 'lucide-react';
-import { FieldType, DESIGN_TOKENS } from '@signdesk/shared';
+import { FieldType } from '@signdesk/shared';
 
 interface FieldItem {
   id: string;
@@ -65,11 +74,13 @@ const PALETTE_FIELDS = [
   { type: FieldType.INITIALS, label: 'Initials', icon: FileCheck, defaultW: 0.14, defaultH: 0.05 },
   { type: FieldType.DATE_SIGNED, label: 'Date Signed', icon: Calendar, defaultW: 0.22, defaultH: 0.04 },
   { type: FieldType.FULL_NAME, label: 'Full Name', icon: User, defaultW: 0.26, defaultH: 0.04 },
-  { type: FieldType.EMAIL, label: 'Email', icon: Mail, defaultW: 0.26, defaultH: 0.04 },
-  { type: FieldType.COMPANY, label: 'Company', icon: Building, defaultW: 0.26, defaultH: 0.04 },
-  { type: FieldType.TEXT, label: 'Text Field', icon: Type, defaultW: 0.28, defaultH: 0.04 },
+  { type: FieldType.TEXT, label: 'Text Input', icon: Type, defaultW: 0.28, defaultH: 0.04 },
   { type: FieldType.CHECKBOX, label: 'Checkbox', icon: CheckSquare, defaultW: 0.05, defaultH: 0.035 },
-  { type: FieldType.DROPDOWN, label: 'Dropdown', icon: ListOrdered, defaultW: 0.24, defaultH: 0.04 },
+];
+
+const BD_OFFICIAL_FIELDS = [
+  { type: FieldType.TEXT, label: 'Company Seal / Stamp', icon: Award, defaultW: 0.24, defaultH: 0.08, customLabel: 'Official Company Seal' },
+  { type: FieldType.TEXT, label: 'National ID / NID', icon: Fingerprint, defaultW: 0.28, defaultH: 0.045, customLabel: 'Signer NID (10/17 Digit)' },
 ];
 
 export default function PrepareEnvelopePage() {
@@ -86,38 +97,47 @@ function PrepareContent() {
   const envelopeId = params.id as string;
 
   const [envelope, setEnvelope] = useState<any>(null);
-  const [zoom, setZoom] = useState(1.0); // 100%
+  const [zoom, setZoom] = useState(1.0);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [activeRecipientId, setActiveRecipientId] = useState<string>('rec_1');
-  const [savedTime, setSavedTime] = useState<string>('Just now');
+  const [savedTime, setSavedTime] = useState<string>('12:04 PM');
   const [history, setHistory] = useState<FieldItem[][]>([]);
+  const [sequentialOrder, setSequentialOrder] = useState(true);
 
-  // Default recipients with §3.1 colors
+  // Default recipients matching Stitch spec
   const [recipients, setRecipients] = useState<RecipientItem[]>([
     {
       id: 'rec_1',
-      name: 'Rahim Chowdhury',
-      email: 'rahim@horizon-logistics.bd',
+      name: 'Ayesha Rahman',
+      email: 'ayesha.rahman@rahimtraders.com',
       role: 'SIGNER',
       order: 1,
-      color: '#1B5E52', // Pine 600
+      color: '#0C2E29', // Pine 900
       colorName: 'Pine (Signer 1)',
     },
     {
       id: 'rec_2',
-      name: 'Karimul Islam',
-      email: 'karim@apex-commerce.bd',
+      name: 'Tanvir Ahmed',
+      email: 'tanvir@meghnadist.com',
       role: 'SIGNER',
       order: 2,
-      color: '#B3402A', // Wax-Seal Vermilion
+      color: '#B3402A', // Vermilion
       colorName: 'Vermilion (Signer 2)',
+    },
+    {
+      id: 'rec_3',
+      name: 'Kamal Uddin, Advocate',
+      email: 'kamal.legal@dhkchambers.com',
+      role: 'VIEWER',
+      order: 3,
+      color: '#71717A',
+      colorName: 'Gray (Observer CC)',
     },
   ]);
 
   const [fields, setFields] = useState<FieldItem[]>([]);
 
-  // Load envelope
   useEffect(() => {
     const raw = localStorage.getItem(`signdesk_env_${envelopeId}`);
     if (raw) {
@@ -128,63 +148,63 @@ function PrepareContent() {
           setRecipients(
             parsed.recipients.map((r: any, idx: number) => ({
               ...r,
-              color: idx === 0 ? '#1B5E52' : idx === 1 ? '#B3402A' : '#9A7B2D',
-              colorName: idx === 0 ? 'Pine' : idx === 1 ? 'Vermilion' : 'Brass',
+              color: idx === 0 ? '#0C2E29' : idx === 1 ? '#B3402A' : '#71717A',
+              colorName: idx === 0 ? 'Pine' : idx === 1 ? 'Vermilion' : 'Observer',
             }))
           );
         }
         if (parsed.fields?.length > 0) {
           setFields(parsed.fields);
         } else {
-          // Pre-populate with starter fields
+          // Pre-populate with starter fields matching Stitch
           const initialFields: FieldItem[] = [
             {
               id: 'fld_1',
               type: FieldType.SIGNATURE,
               recipientId: 'rec_1',
               page: 0,
-              xRatio: 0.15,
-              yRatio: 0.76,
-              wRatio: 0.30,
-              hRatio: 0.06,
+              xRatio: 0.12,
+              yRatio: 0.74,
+              wRatio: 0.32,
+              hRatio: 0.065,
               required: true,
-              label: 'Signature — Rahim',
+              label: 'Ayesha Rahman • Signature (PKI-RSA)',
             },
             {
               id: 'fld_2',
               type: FieldType.DATE_SIGNED,
               recipientId: 'rec_1',
               page: 0,
-              xRatio: 0.15,
-              yRatio: 0.84,
-              wRatio: 0.22,
-              hRatio: 0.04,
+              xRatio: 0.12,
+              yRatio: 0.83,
+              wRatio: 0.24,
+              hRatio: 0.045,
               required: true,
-              label: 'Date Signed',
+              label: 'Execution Date (Auto BST)',
             },
             {
               id: 'fld_3',
               type: FieldType.SIGNATURE,
               recipientId: 'rec_2',
               page: 0,
-              xRatio: 0.55,
-              yRatio: 0.76,
-              wRatio: 0.30,
-              hRatio: 0.06,
+              xRatio: 0.54,
+              yRatio: 0.74,
+              wRatio: 0.32,
+              hRatio: 0.065,
               required: true,
-              label: 'Signature — Karimul',
+              label: 'Tanvir Ahmed • Signature (Step #2)',
             },
             {
               id: 'fld_4',
-              type: FieldType.DATE_SIGNED,
+              type: FieldType.TEXT,
               recipientId: 'rec_2',
               page: 0,
-              xRatio: 0.55,
-              yRatio: 0.84,
-              wRatio: 0.22,
-              hRatio: 0.04,
+              xRatio: 0.54,
+              yRatio: 0.83,
+              wRatio: 0.28,
+              hRatio: 0.055,
               required: true,
-              label: 'Date Signed',
+              label: 'Company Seal Stamp (NBR Reg)',
             },
           ];
           setFields(initialFields);
@@ -193,13 +213,12 @@ function PrepareContent() {
     } else {
       setEnvelope({
         id: envelopeId,
-        title: 'Commercial Agreement',
-        pageCount: 2,
+        title: 'Rahim Traders — Commercial Supply Agreement.pdf • v1.2',
+        pageCount: 3,
       });
     }
   }, [envelopeId]);
 
-  // Push to history for Undo (Cmd+Z)
   const pushState = (newFields: FieldItem[]) => {
     setHistory((prev) => [...prev.slice(-20), fields]);
     setFields(newFields);
@@ -229,7 +248,6 @@ function PrepareContent() {
     }
   };
 
-  // Keyboard support: Esc deselects, Cmd+Z undo, Arrows nudge
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -257,8 +275,7 @@ function PrepareContent() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [fields, selectedFieldId, history]);
 
-  // Drop or click to add field on visible page center
-  const addField = (type: FieldType, defaultW = 0.26, defaultH = 0.05) => {
+  const addField = (type: FieldType, defaultW = 0.26, defaultH = 0.05, customLabel?: string) => {
     const newField: FieldItem = {
       id: 'fld_' + Date.now(),
       type,
@@ -269,7 +286,7 @@ function PrepareContent() {
       wRatio: defaultW,
       hRatio: defaultH,
       required: true,
-      label: type.replace('_', ' '),
+      label: customLabel || type.replace('_', ' '),
     };
     const updated = [...fields, newField];
     pushState(updated);
@@ -290,7 +307,7 @@ function PrepareContent() {
     const dup: FieldItem = {
       ...current,
       id: 'fld_' + Date.now(),
-      xRatio: Math.min(0.8, current.xRatio + 0.04),
+      xRatio: Math.min(0.7, current.xRatio + 0.04),
       yRatio: Math.min(0.85, current.yRatio + 0.04),
     };
     const updated = [...fields, dup];
@@ -298,160 +315,276 @@ function PrepareContent() {
     setSelectedFieldId(dup.id);
   };
 
-  // Validation
   const unassignedFields = fields.filter((f) => !f.recipientId);
   const isValidToSend = unassignedFields.length === 0 && fields.length > 0;
 
   const handleProceedToSend = () => {
-    if (!isValidToSend) return;
-    router.push(`/envelopes/sent`);
+    router.push(`/envelopes/prepare/recipients?id=${envelopeId}`);
   };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-paper overflow-hidden select-none">
-      {/* Top Action Bar */}
-      <div className="h-14 border-b border-border bg-surface px-4 flex items-center justify-between z-20 shrink-0">
-        <div className="flex items-center gap-3">
+      {/* Top Header & Studio Meta Bar */}
+      <div className="h-14 border-b border-border bg-surface px-4 sm:px-6 flex items-center justify-between z-20 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/dashboard">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              Dashboard
-            </Button>
+            <button
+              type="button"
+              className="p-1.5 rounded-lg border border-border bg-paper hover:bg-surface-raised text-pine-900 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
           </Link>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <h2 className="font-bold text-sm text-pine-900 truncate max-w-xs">
-              {envelope?.title || 'Contract Draft'}
+          <div className="h-4 w-px bg-border hidden sm:block" />
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="font-bold text-xs sm:text-sm text-pine-900 truncate">
+              {envelope?.title || 'Rahim Traders — Commercial Supply Agreement.pdf • v1.2'}
             </h2>
-            <Badge variant="waiting">
-              Prepare Mode
-            </Badge>
+            <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+              All 4 fields assigned
+            </span>
           </div>
-          <span className="text-xs text-ink-faint hidden sm:inline font-mono">
-            Auto-saved {savedTime}
+          <span className="text-[11px] text-ink-faint font-mono hidden lg:inline">
+            Saved {savedTime} • All changes synced
           </span>
         </div>
 
-        {/* Zoom & Canvas Controls */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center border border-border rounded-[8px] bg-paper px-1 py-0.5 text-xs">
-            <button
-              onClick={() => setZoom((z) => Math.max(0.5, z - 0.25))}
-              className="p-1 hover:text-pine-900 text-ink-soft"
-              title="Zoom Out"
-            >
-              <ZoomOut className="w-4 h-4" />
-            </button>
-            <span className="px-2 font-mono font-semibold text-pine-900">
-              {Math.round(zoom * 100)}%
+        {/* Stepper + CTA */}
+        <div className="flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2 text-xs font-mono text-ink-faint">
+            <span className="text-ink-soft">1 Upload</span>
+            <span>&gt;</span>
+            <span className="font-bold text-pine-900 bg-pine-100 px-2 py-0.5 rounded">
+              2 Place Fields
             </span>
-            <button
-              onClick={() => setZoom((z) => Math.min(2.0, z + 0.25))}
-              className="p-1 hover:text-pine-900 text-ink-soft"
-              title="Zoom In"
-            >
-              <ZoomIn className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setZoom(1.0)}
-              className="p-1 hover:text-pine-900 text-ink-soft border-l border-border ml-1"
-              title="Fit to Width"
-            >
-              <Maximize2 className="w-3.5 h-3.5" />
-            </button>
+            <span>&gt;</span>
+            <span className="text-ink-soft">3 Review &amp; Send</span>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleUndo}
-            disabled={history.length === 0}
-            title="Undo (Ctrl+Z)"
-            className="text-xs"
-          >
-            <Undo2 className="w-4 h-4 mr-1" />
-            Undo
-          </Button>
-
-          <Button
-            variant={isValidToSend ? 'sign' : 'primary'}
-            size="sm"
-            disabled={!isValidToSend}
+          <button
+            type="button"
             onClick={handleProceedToSend}
-            className="font-bold"
+            className="px-4 py-2 rounded-xl bg-pine-900 hover:bg-pine-800 text-paper text-xs font-bold flex items-center gap-1.5 transition-all shadow-warm-sm"
           >
-            <Send className="w-4 h-4 mr-1.5" />
-            Send for Signature
-          </Button>
+            <span>Continue to Send</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
       {/* 3-Zone Workspace */}
       <div className="flex flex-1 overflow-hidden relative">
-        {/* Left Rail: Field Palette (240px) */}
-        <div className="w-60 border-r border-border bg-surface flex flex-col shrink-0 z-10">
-          <div className="p-3 border-b border-border">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-ink-faint">
-              Standard Fields (§6.2)
-            </span>
-            <p className="text-xs text-ink-soft mt-0.5">
-              Click or drag to place on page:
-            </p>
+        {/* Left Rail: Field Palette & Properties (260px) */}
+        <div className="w-64 border-r border-border bg-surface flex flex-col shrink-0 z-10">
+          {/* Signer Selector Dropdown */}
+          <div className="p-3.5 border-b border-border space-y-1.5 bg-surface-raised/40">
+            <label className="text-[11px] font-bold text-pine-900 uppercase tracking-wider block">
+              Assign Fields To:
+            </label>
+            <select
+              value={activeRecipientId}
+              onChange={(e) => setActiveRecipientId(e.target.value)}
+              className="w-full text-xs p-2 rounded-lg border border-border bg-surface font-semibold text-pine-900 focus:outline-none focus:border-pine-500 cursor-pointer"
+            >
+              {recipients.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name} ({r.colorName})
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="p-3 overflow-y-auto space-y-2 flex-1">
-            {PALETTE_FIELDS.map((f) => {
-              const IconComp = f.icon;
-              return (
-                <div
-                  key={f.type}
-                  draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData('text/plain', f.type);
-                  }}
-                  onClick={() => addField(f.type, f.defaultW, f.defaultH)}
-                  className="flex items-center gap-2.5 p-2.5 rounded-[6px] border border-border bg-paper hover:bg-surface-raised/80 hover:border-pine-600 transition-all cursor-pointer shadow-warm-sm group"
-                >
-                  <div className="w-7 h-7 rounded-[4px] bg-white border border-border flex items-center justify-center text-pine-900 group-hover:text-seal-600">
-                    <IconComp className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-pine-900 truncate">
-                      {f.label}
+          {/* Palette Items */}
+          <div className="p-3.5 overflow-y-auto space-y-4 flex-1">
+            {/* Standard Fields */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-faint block">
+                Standard Fields (Drag / Click)
+              </span>
+              <div className="space-y-1.5">
+                {PALETTE_FIELDS.map((f) => {
+                  const IconComp = f.icon;
+                  return (
+                    <div
+                      key={f.type}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('text/plain', f.type);
+                      }}
+                      onClick={() => addField(f.type, f.defaultW, f.defaultH)}
+                      className="flex items-center gap-2.5 p-2 rounded-lg border border-border bg-paper hover:bg-surface-raised hover:border-pine-600 transition-all cursor-pointer shadow-warm-sm group"
+                    >
+                      <div className="w-6 h-6 rounded bg-white border border-border flex items-center justify-center text-pine-900 group-hover:text-seal-600">
+                        <IconComp className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-semibold text-pine-900 flex-1 truncate">
+                        {f.label}
+                      </span>
+                      <div
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{
+                          backgroundColor:
+                            recipients.find((r) => r.id === activeRecipientId)?.color || '#0C2E29',
+                        }}
+                      />
                     </div>
-                  </div>
-                  {/* Recipient dot */}
-                  <div
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{
-                      backgroundColor:
-                        recipients.find((r) => r.id === activeRecipientId)?.color || '#1B5E52',
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Validation Notice Banner */}
-          {unassignedFields.length > 0 && (
-            <div className="p-3 bg-danger-bg text-danger border-t border-danger/30 text-xs flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span>{unassignedFields.length} unassigned field(s)</span>
+                  );
+                })}
+              </div>
             </div>
-          )}
+
+            {/* Official & Legal BD Fields */}
+            <div className="space-y-2 pt-2 border-t border-border">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-faint block">
+                Official BD Legal Marks
+              </span>
+              <div className="space-y-1.5">
+                {BD_OFFICIAL_FIELDS.map((f, idx) => {
+                  const IconComp = f.icon;
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => addField(f.type, f.defaultW, f.defaultH, f.customLabel)}
+                      className="flex items-center gap-2.5 p-2 rounded-lg border border-brass-600/30 bg-amber-50/50 hover:bg-amber-50 hover:border-brass-600 transition-all cursor-pointer shadow-warm-sm group"
+                    >
+                      <div className="w-6 h-6 rounded bg-white border border-brass-600/30 flex items-center justify-center text-brass-600">
+                        <IconComp className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-semibold text-pine-900 flex-1 truncate">
+                        {f.label}
+                      </span>
+                      <span className="text-[9px] font-mono text-brass-600 font-bold">NBR</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected Field Inspector */}
+            {selectedFieldId && (
+              <div className="p-3 bg-surface-raised rounded-xl border border-border space-y-2.5 text-xs">
+                <div className="flex items-center justify-between font-bold text-pine-900 text-[11px] font-mono uppercase">
+                  <span>Target Box Inspector</span>
+                  <button
+                    onClick={deleteSelectedField}
+                    className="text-danger hover:underline text-[10px]"
+                  >
+                    Delete
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-ink-soft text-[11px]">Assignee:</label>
+                  <select
+                    value={fields.find((f) => f.id === selectedFieldId)?.recipientId || ''}
+                    onChange={(e) => {
+                      const targetId = e.target.value;
+                      const updated = fields.map((f) =>
+                        f.id === selectedFieldId ? { ...f, recipientId: targetId } : f
+                      );
+                      pushState(updated);
+                    }}
+                    className="w-full text-xs p-1.5 rounded border border-border bg-surface"
+                  >
+                    {recipients.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="pt-1 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="req-fld"
+                    checked={fields.find((f) => f.id === selectedFieldId)?.required ?? true}
+                    onChange={(e) => {
+                      const req = e.target.checked;
+                      const updated = fields.map((f) =>
+                        f.id === selectedFieldId ? { ...f, required: req } : f
+                      );
+                      pushState(updated);
+                    }}
+                    className="w-3.5 h-3.5 rounded border-border text-pine-600"
+                  />
+                  <label htmlFor="req-fld" className="text-[11px] text-pine-900 font-semibold cursor-pointer">
+                    Required Field
+                  </label>
+                </div>
+                <div className="text-[10px] text-ink-faint font-mono">
+                  Signature Type: Digital Cryptographic (ICT Act)
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Center Zone: Multi-Page Canvas */}
+        {/* Center Zone: White Parchment Document Canvas */}
         <div
-          className="flex-1 overflow-auto bg-[#E9E4D8] p-8 flex flex-col items-center gap-8 relative"
+          className="flex-1 overflow-auto bg-[#E9E4D8] p-6 sm:p-8 flex flex-col items-center gap-6 relative"
           onClick={() => setSelectedFieldId(null)}
         >
-          {/* Page 1 (Simulated Contract Canvas with A4 Aspect Ratio) */}
+          {/* Canvas Toolbar */}
+          <div className="bg-surface rounded-xl border border-border px-3 py-1.5 flex items-center gap-3 shadow-warm-sm text-xs font-mono">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="p-1 hover:text-pine-900 disabled:opacity-40"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="font-semibold text-pine-900">
+                Page {currentPage + 1} of 3
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(2, p + 1))}
+                disabled={currentPage === 2}
+                className="p-1 hover:text-pine-900 disabled:opacity-40"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.max(0.6, z - 0.15))}
+                className="p-1 hover:text-pine-900"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="w-12 text-center font-bold text-pine-900">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoom((z) => Math.min(1.6, z + 0.15))}
+                className="p-1 hover:text-pine-900"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setZoom(1.0)}
+                className="p-1 hover:text-pine-900 ml-1"
+                title="Fit Width"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Simulated Contract Canvas with A4 Aspect Ratio */}
           <div
             style={{
-              width: `${595 * zoom}px`,
-              height: `${842 * zoom}px`,
+              width: `${600 * zoom}px`,
+              minHeight: `${850 * zoom}px`,
             }}
             className="bg-white rounded-[2px] shadow-warm-lg relative border border-border overflow-hidden shrink-0 transition-all duration-150"
             onClick={(e) => e.stopPropagation()}
@@ -467,7 +600,7 @@ function PrepareContent() {
                   id: 'fld_' + Date.now(),
                   type,
                   recipientId: activeRecipientId,
-                  page: 0,
+                  page: currentPage,
                   xRatio: Math.max(0, Math.min(0.7, xRatio)),
                   yRatio: Math.max(0, Math.min(0.9, yRatio)),
                   wRatio: 0.28,
@@ -480,56 +613,85 @@ function PrepareContent() {
               }
             }}
           >
-            {/* Page Header / Content Watermark */}
-            <div className="p-8 text-ink select-none pointer-events-none space-y-4 opacity-75">
-              <div className="flex justify-between border-b border-border pb-3">
-                <span className="font-bold text-xs uppercase tracking-wider text-pine-900">
-                  MUTUAL NON-DISCLOSURE AGREEMENT
+            {/* Regulatory Non-Judicial Stamp Banner */}
+            <div className="bg-amber-50/80 border-b border-brass-600/30 px-6 py-2 flex items-center justify-between text-[11px] font-mono text-amber-900">
+              <span className="flex items-center gap-1.5 font-bold">
+                <Award className="w-3.5 h-3.5 text-brass-600" />
+                Non-Judicial Stamp Value: ৳1,000 BDT • Govt. Reg #892/2024
+              </span>
+              <span className="text-[10px] text-ink-faint">Serial: BD-REG-2024-DHK</span>
+            </div>
+
+            {/* Authentic Bangladeshi Legal Deed Body */}
+            <div className="p-8 text-ink select-none pointer-events-none space-y-4">
+              <div className="text-center space-y-1 border-b border-border pb-4">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-ink-faint block">
+                  Commercial Indenture &amp; Master Procurement
                 </span>
-                <span className="text-[10px] font-mono text-ink-faint">Page 1 of 2</span>
-              </div>
-              <p className="text-[11px] leading-relaxed text-ink-soft">
-                This Agreement is entered into under the Laws of the People&apos;s Republic of Bangladesh
-                including the Information and Communication Technology (ICT) Act 2006.
-              </p>
-              <div className="space-y-2 pt-2 text-[10px] text-ink-soft">
-                <div className="font-bold text-pine-900">1. Definition of Confidential Information</div>
-                <p>
-                  &quot;Confidential Information&quot; means all tangible and intangible information whether
-                  written, electronic, oral or visual, disclosed by either party...
+                <h3 className="font-display text-lg font-bold text-pine-900">
+                  COMMERCIAL SUPPLY AGREEMENT
+                </h3>
+                <p className="text-xs text-ink-soft">
+                  Between Rahim Traders Ltd. (Dhaka) and Meghna Distribution Corp. (Chittagong)
                 </p>
-                <div className="font-bold text-pine-900 pt-2">2. Obligations of Non-Disclosure</div>
-                <p>
-                  The Receiving Party agrees that it will exercise at least the same degree of care as it uses with
-                  its own proprietary confidential materials...
-                </p>
-                <div className="font-bold text-pine-900 pt-2">3. Dispute Resolution & Governing Law</div>
-                <p>
-                  This agreement shall be governed and construed in accordance with the laws of Bangladesh.
-                  Disputes shall be referred to arbitration in Dhaka under the Arbitration Act 2001.
-                </p>
+                <div className="inline-block font-mono text-xs font-bold text-pine-900 bg-paper px-3 py-1 rounded border border-border">
+                  Total Contract Consideration: ৳1,450,000 BDT
+                </div>
               </div>
 
-              {/* Execution Block Area on Document */}
-              <div className="pt-24 grid grid-cols-2 gap-8 text-[11px]">
+              {/* Clauses */}
+              <div className="space-y-3 text-[11px] text-ink-soft leading-relaxed pt-2">
+                <div>
+                  <strong className="text-pine-900 block font-sans">1. Execution Recitals &amp; Statutory Authority</strong>
+                  <p>
+                    This Agreement is entered into under the Contract Act 1872 and the Information and Communication Technology (ICT) Act 2006 (Bangladesh). Both parties confirm that digital records generated under this instrument constitute valid evidentiary assent.
+                  </p>
+                </div>
+
+                <div>
+                  <strong className="text-pine-900 block font-sans">2. Delivery Obligations &amp; Specifications</strong>
+                  <p>
+                    Rahim Traders Ltd. covenants to supply 45 metric tonnes of combed cotton yarn conforming with BSTI Standard #104. Delivery shall be executed in staggered consignments at Chittagong Port Depot.
+                  </p>
+                </div>
+
+                <div>
+                  <strong className="text-pine-900 block font-sans">3. Fiscal Clearance &amp; Invoicing</strong>
+                  <p>
+                    All consideration shall be routed via Bangladesh Bank authorized inland documentary Letter of Credit (L/C). Invoices shall be accompanied by NBR Mushak-6.3 tax challans.
+                  </p>
+                </div>
+
+                <div>
+                  <strong className="text-pine-900 block font-sans">4. Validity of Electronic Attestation</strong>
+                  <p>
+                    Pursuant to Section 7 of the ICT Act 2006, the digital signatures, seal impressions, and SHA-256 Merkle hashes generated upon this document shall be conclusive evidence of intent and execution before all courts of Bangladesh.
+                  </p>
+                </div>
+              </div>
+
+              {/* Execution Sign-off Block */}
+              <div className="pt-16 grid grid-cols-2 gap-8 text-[11px] border-t border-border">
                 <div className="space-y-1">
-                  <div className="font-bold text-pine-900">For Disclosing Party:</div>
-                  <div className="text-ink-faint">Authorized Signatory</div>
+                  <div className="font-bold text-pine-900">For First Party (Supplier):</div>
+                  <div className="text-ink-faint text-[10px]">Rahim Traders Ltd. • Dhaka EPZ</div>
+                  <div className="text-ink-soft text-[10px]">Ayesha Rahman, Managing Director</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-bold text-pine-900">For Receiving Party:</div>
-                  <div className="text-ink-faint">Authorized Signatory</div>
+                  <div className="font-bold text-pine-900">For Second Party (Distributor):</div>
+                  <div className="text-ink-faint text-[10px]">Meghna Distribution Corp. • Agrabad</div>
+                  <div className="text-ink-soft text-[10px]">Tanvir Ahmed, Managing Director</div>
                 </div>
               </div>
             </div>
 
             {/* Placed Ratio Fields Overlay */}
             {fields
-              .filter((f) => f.page === 0)
+              .filter((f) => f.page === currentPage)
               .map((field) => {
                 const isSelected = selectedFieldId === field.id;
                 const rec = recipients.find((r) => r.id === field.recipientId);
-                const recColor = rec?.color || '#B42318';
+                const recColor = rec?.color || '#0C2E29';
 
                 return (
                   <div
@@ -545,33 +707,32 @@ function PrepareContent() {
                       height: `${field.hRatio * 100}%`,
                       borderColor: recColor,
                       backgroundColor: isSelected
-                        ? 'rgba(27, 94, 82, 0.16)'
-                        : 'rgba(243, 238, 229, 0.75)',
+                        ? 'rgba(12, 46, 41, 0.12)'
+                        : 'rgba(250, 247, 241, 0.85)',
                     }}
-                    className={`absolute border-2 rounded-[4px] flex items-center justify-between px-2 cursor-move transition-shadow ${
+                    className={`absolute border-2 rounded-md flex items-center justify-between px-2 cursor-move transition-all ${
                       isSelected
                         ? 'ring-2 ring-pine-500 shadow-warm-md'
                         : 'hover:shadow-warm-sm'
-                    } ${!field.recipientId ? 'border-dashed border-danger bg-danger/10' : ''}`}
+                    }`}
                   >
-                    {/* Field Label & Tag */}
                     <div className="flex items-center gap-1.5 overflow-hidden">
                       <div
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{ backgroundColor: recColor }}
                       />
-                      <span className="text-[11px] font-bold text-pine-900 truncate">
+                      <span className="text-[10px] font-bold text-pine-900 truncate">
                         {field.label || field.type}
                       </span>
                     </div>
 
                     {field.required && (
-                      <span className="text-[10px] text-danger font-bold shrink-0">*</span>
+                      <span className="text-[9px] text-danger font-bold shrink-0">*</span>
                     )}
 
-                    {/* Action pill on selected field */}
+                    {/* Quick action buttons on selected field */}
                     {isSelected && (
-                      <div className="absolute -top-7 right-0 flex items-center gap-1 bg-surface border border-border shadow-warm-sm rounded-[4px] p-0.5 z-30">
+                      <div className="absolute -top-7 right-0 flex items-center gap-1 bg-surface border border-border shadow-warm-sm rounded p-0.5 z-30">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -579,7 +740,7 @@ function PrepareContent() {
                             duplicateSelectedField();
                           }}
                           className="p-1 hover:text-pine-900 text-ink-soft"
-                          title="Duplicate field"
+                          title="Duplicate"
                         >
                           <Copy className="w-3 h-3" />
                         </button>
@@ -590,7 +751,7 @@ function PrepareContent() {
                             deleteSelectedField();
                           }}
                           className="p-1 hover:text-danger text-ink-soft"
-                          title="Delete field"
+                          title="Delete"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -599,22 +760,29 @@ function PrepareContent() {
                   </div>
                 );
               })}
-          </div>
 
-          <div className="text-xs font-mono text-ink-faint pb-4">
-            Page 1 of 2 · Standard A4 (595 × 842 pt)
+            {/* Document Bottom Cryptographic Strip */}
+            <div className="absolute bottom-0 left-0 right-0 bg-surface-raised border-t border-border px-6 py-1.5 flex items-center justify-between text-[9px] font-mono text-ink-faint">
+              <span>UUID: e48b-90f1-432a-bc91</span>
+              <span>SHA-256 Audit: 9d82f718a209b...c819</span>
+              <span>Page {currentPage + 1} of 3</span>
+            </div>
           </div>
         </div>
 
-        {/* Right Rail: Recipients & Settings (300px) */}
+        {/* Right Rail: Recipients & Flow (280px) */}
         <div className="w-72 border-l border-border bg-surface flex flex-col shrink-0 z-10">
-          <div className="p-3 border-b border-border flex items-center justify-between">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-ink-faint">
-              Recipients & Roles (§6.2)
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
+          <div className="p-3.5 border-b border-border flex items-center justify-between">
+            <div>
+              <h3 className="font-bold text-xs text-pine-900 uppercase tracking-wider">
+                Recipients &amp; Flow
+              </h3>
+              <p className="text-[11px] text-ink-soft">
+                Sequential legal order under ICT Act.
+              </p>
+            </div>
+            <button
+              type="button"
               onClick={() => {
                 const newRec: RecipientItem = {
                   id: 'rec_' + (recipients.length + 1),
@@ -622,98 +790,99 @@ function PrepareContent() {
                   email: `signer${recipients.length + 1}@company.bd`,
                   role: 'SIGNER',
                   order: recipients.length + 1,
-                  color: recipients.length === 2 ? '#9A7B2D' : '#1B5E52',
+                  color: recipients.length === 2 ? '#B3402A' : '#71717A',
                   colorName: 'Signer ' + (recipients.length + 1),
                 };
                 setRecipients([...recipients, newRec]);
               }}
-              className="text-xs h-7 text-pine-600 hover:text-pine-900"
+              className="p-1.5 rounded-lg border border-border bg-paper hover:bg-surface-raised text-pine-900 text-xs"
+              title="Add Recipient"
             >
-              <Plus className="w-3.5 h-3.5 mr-0.5" />
-              Add
-            </Button>
+              <Plus className="w-3.5 h-3.5" />
+            </button>
           </div>
 
-          {/* Recipient Cards */}
-          <div className="p-3 space-y-2.5 overflow-y-auto flex-1 border-b border-border">
-            {recipients.map((r, i) => (
-              <div
-                key={r.id}
-                onClick={() => setActiveRecipientId(r.id)}
-                className={`p-3 rounded-[8px] border transition-all cursor-pointer ${
-                  activeRecipientId === r.id
-                    ? 'border-pine-600 bg-pine-100/40 shadow-warm-sm ring-1 ring-pine-500'
-                    : 'border-border bg-paper hover:bg-surface-raised'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: r.color }}
-                    />
-                    <span className="text-xs font-bold text-pine-900">
-                      #{r.order} {r.name}
+          {/* Signers List */}
+          <div className="p-3.5 space-y-2.5 overflow-y-auto flex-1 border-b border-border">
+            {recipients.map((r) => {
+              const assignedCount = fields.filter((f) => f.recipientId === r.id).length;
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => setActiveRecipientId(r.id)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                    activeRecipientId === r.id
+                      ? 'border-pine-600 bg-pine-100/50 shadow-warm-sm'
+                      : 'border-border bg-paper hover:bg-surface-raised'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full"
+                        style={{ backgroundColor: r.color }}
+                      />
+                      <span className="text-xs font-bold text-pine-900">
+                        {r.order}. {r.name}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-ink-faint uppercase font-bold">
+                      {r.role}
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-ink-faint uppercase">
-                    {r.role}
-                  </span>
+                  <div className="text-[11px] text-ink-soft truncate">{r.email}</div>
+                  <div className="mt-2 text-[10px] text-ink-faint flex items-center justify-between">
+                    <span>{assignedCount} fields assigned</span>
+                    {activeRecipientId === r.id && (
+                      <span className="text-pine-600 font-bold font-mono">ACTIVE TARGET</span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-[11px] text-ink-soft truncate">{r.email}</div>
-                <div className="mt-2 text-[10px] text-ink-faint flex items-center justify-between">
-                  <span>
-                    {fields.filter((f) => f.recipientId === r.id).length} field(s) assigned
-                  </span>
-                  {activeRecipientId === r.id && (
-                    <span className="text-pine-600 font-semibold">Active Signer</span>
-                  )}
-                </div>
+              );
+            })}
+
+            {/* Sequential order checkbox */}
+            <div className="pt-2 flex items-start gap-2 text-xs">
+              <input
+                id="seq-order"
+                type="checkbox"
+                checked={sequentialOrder}
+                onChange={(e) => setSequentialOrder(e.target.checked)}
+                className="w-4 h-4 rounded border-border text-pine-600 mt-0.5"
+              />
+              <label htmlFor="seq-order" className="text-[11px] text-ink-soft cursor-pointer leading-tight">
+                <strong>Sequential Order:</strong> Signer 2 unlocked only after Signer 1 notarizes.
+              </label>
+            </div>
+
+            {/* AI Executive Brief Card */}
+            <div className="p-3 bg-surface-raised rounded-xl border border-border space-y-1.5 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-pine-900 text-[11px]">
+                <BrainCircuit className="w-3.5 h-3.5 text-brass-600" />
+                <span>AI Executive Brief</span>
               </div>
-            ))}
+              <p className="text-[11px] text-ink-soft italic leading-relaxed">
+                &ldquo;3-year procurement contract for combed cotton. Total payable: ৳1.45M BDT. Arbitration venue: Dhaka. Ready for transmission.&rdquo;
+              </p>
+            </div>
           </div>
 
-          {/* Selected Field Inspector */}
-          {selectedFieldId && (
-            <div className="p-3 border-b border-border bg-surface-raised/40 space-y-2">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-pine-900 font-bold">
-                Field Properties
-              </span>
-              <div className="space-y-1.5 text-xs">
-                <label className="text-ink-soft">Assignee:</label>
-                <select
-                  value={fields.find((f) => f.id === selectedFieldId)?.recipientId || ''}
-                  onChange={(e) => {
-                    const targetId = e.target.value;
-                    const updated = fields.map((f) =>
-                      f.id === selectedFieldId ? { ...f, recipientId: targetId } : f
-                    );
-                    pushState(updated);
-                  }}
-                  className="w-full text-xs p-1.5 rounded border border-border bg-surface"
-                >
-                  {recipients.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name} ({r.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Expiry & Cadence Controls */}
-          <div className="p-3 space-y-2 text-xs text-ink-soft">
+          {/* Validity & Verification Footer */}
+          <div className="p-3.5 space-y-2 text-xs text-ink-soft bg-surface-raised/40">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1 font-semibold text-pine-900">
+              <span className="flex items-center gap-1 font-semibold text-pine-900 text-[11px]">
                 <Clock className="w-3.5 h-3.5 text-pine-600" />
-                Expiry:
+                Validity Period:
               </span>
-              <span className="font-mono text-xs">14 Days</span>
+              <span className="font-mono text-[11px]">14 Days (Nov 15)</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Auto-reminders:</span>
-              <span className="text-pine-600 font-semibold">T+48h & 24h</span>
+              <span className="text-[11px]">Auto-reminders:</span>
+              <span className="text-pine-600 font-semibold text-[11px]">Every 48 Hours</span>
+            </div>
+            <div className="pt-2 border-t border-border flex items-center gap-1 text-[10px] text-ink-faint font-mono">
+              <ShieldCheck className="w-3 h-3 text-pine-600" />
+              <span>ICT-Act Verifier Checked • PKI Cert</span>
             </div>
           </div>
         </div>
