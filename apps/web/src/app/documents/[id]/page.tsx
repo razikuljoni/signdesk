@@ -1,12 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth-guard';
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   FileText,
@@ -28,6 +25,15 @@ import {
   RotateCcw,
   Check,
   Lock,
+  MessageSquare,
+  Scale,
+  Award,
+  Layers,
+  FileCheck2,
+  Send,
+  Eye,
+  Building2,
+  FolderOpen
 } from 'lucide-react';
 
 export default function DocumentDetailPage() {
@@ -40,67 +46,100 @@ export default function DocumentDetailPage() {
 
 function DocumentDetailContent() {
   const params = useParams();
-  const id = params.id as string;
+  const router = useRouter();
+  const id = (params.id as string) || 'ENV-BD-2024-8849-ICT';
 
-  const [activeTab, setActiveTab] = useState<'timeline' | 'preview' | 'certificate' | 'files'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'files'>('timeline');
   const [remindedSent, setRemindedSent] = useState(false);
   const [extendedNotice, setExtendedNotice] = useState(false);
   const [isVoided, setIsVoided] = useState(false);
-  const [version, setVersion] = useState(1);
-  const [verifying, setVerifying] = useState(false);
-  const [verifyResult, setVerifyResult] = useState<{
-    verified: boolean;
-    hash: string;
-    chainValid: boolean;
-  } | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
-  // Document model
   const doc = {
-    id,
-    title: 'Mutual Non-Disclosure Agreement — Horizon Logistics',
-    status: isVoided ? 'voided' : 'waiting',
-    sentAt: '2026-11-10T14:25:00Z',
-    expiresAt: '2026-11-24T14:25:00Z',
-    originalHash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
-    finalHash: '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069',
+    id: id.startsWith('ENV-') ? id : `ENV-BD-${id}`,
+    title: 'Rahim Traders — Commercial Supply Agreement',
+    subtitle: 'Executing counterparty: Meghna Distribution Corp. • Standard Supply Terms & Conditions (Annexure A to D)',
+    status: isVoided ? 'Voided' : 'In Progress (Awaiting Counterparty)',
+    createdBST: '24 Oct 2024, 09:30 AM BST',
+    expiresBST: '28 Oct 2024, 23:59 BST',
+    valueBDT: '৳1,450,000 BDT',
+    lcRef: 'Letter of Credit (LC) Irrevocable Terms • NBR Mushak-6.3',
+    originalHash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     signers: [
       {
         order: 1,
-        name: 'Rahim Chowdhury',
-        email: 'rahim@horizon-logistics.bd',
-        status: 'notified',
-        ip: '103.205.71.12 (Dhaka, BD)',
-        notifiedAt: '2026-11-10 20:25:00 BST',
-        token: 'demo_token_rahim_7a8b9c0d1e2f3a4b',
+        name: 'Ayesha Rahman',
+        role: 'Managing Director, Rahim Textiles & Trade Ltd.',
+        email: 'ayesha.rahman@rahimtrade.com.bd',
+        status: 'Executed & Affixed',
+        completedAt: '24 Oct 2024, 10:14 AM BST',
+        ip: '103.25.12.8 (Gulshan-2, Dhaka)',
+        nidVerified: 'NID: ••••••••5521 (EC Verified via Porichoy)',
+        hash: 'c74b901a8849e3...99e4',
+        color: '#0C2E29',
+        isDone: true,
       },
       {
         order: 2,
-        name: 'Karimul Islam',
-        email: 'karim@apex-commerce.bd',
-        status: 'pending',
-        ip: null,
-        notifiedAt: null,
-        token: 'demo_token_karim_4b5c6d7e8f9a0b1c',
+        name: 'Tanvir Ahmed',
+        role: 'Managing Director, Meghna Distribution Corp.',
+        email: 't.ahmed@meghnadist.com',
+        phone: '+880 1711-884920',
+        status: 'Awaiting Signature (Current Turn)',
+        lastViewed: '24 Oct 2024, 11:15 AM BST',
+        ip: '103.114.98.24 (Agrabad, Chittagong)',
+        dispatchChannel: 'Magic Link delivered via WhatsApp & TLS Email',
+        tokenLink: '/sign/demo_token_tanvir_4b5c6d7e8f9a0b1c',
+        color: '#B3402A',
+        isDone: false,
+      },
+      {
+        order: 3,
+        name: 'Kamal Uddin, Advocate',
+        role: 'Legal Counsel (DCCI / Supreme Court Bar)',
+        email: 'legal@dcibar.org.bd',
+        status: 'Observer / Legal CC',
+        note: 'Automated signed tamper-evident dispatch queued upon Signer 2 execution.',
+        color: '#71717A',
+        isDone: false,
       },
     ],
-    auditEvents: [
+    timelineEvents: [
       {
-        id: 'evt_1',
-        action: 'Envelope Created & Uploaded',
-        actor: 'Tanvir Ahmed (Sender)',
-        timestamp: '10 Nov 2026, 20:24:12 BST (UTC+06:00)',
-        ip: '103.205.71.12',
-        hash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
-        prevHash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
+        time: '11:15:02 BST',
+        title: 'Envelope Opened by Signer 2 (Tanvir Ahmed)',
+        detail: 'Active Session: Counterparty accessed execution chamber via secure token OTP • IP: 103.114.98.24 Agrabad, Chittagong',
+        type: 'view',
       },
       {
-        id: 'evt_2',
-        action: 'Dispatched to Signer 1 (Rahim Chowdhury)',
-        actor: 'SignDesk Notification Service',
-        timestamp: '10 Nov 2026, 20:25:00 BST (UTC+06:00)',
-        ip: '10.0.4.18 (System Dispatcher)',
-        hash: '7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b',
-        prevHash: '4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c9e830a7b512c4f82d1c',
+        time: '10:14:48 BST',
+        title: 'Magic Link Dispatched to Counterparty',
+        detail: 'Delivered via Bangladesh WhatsApp Business Gateway & Corporate MX Route • HTTP 200 Delivered',
+        type: 'dispatch',
+      },
+      {
+        time: '10:14:12 BST',
+        title: 'Ayesha Rahman Signed & Sealed (SHA-256 Validated)',
+        detail: 'NID Biometric Verification via Porichoy API gateway • IP: 103.25.12.8 Gulshan-2, Dhaka • ECDSA Stamped',
+        type: 'sign',
+      },
+      {
+        time: '09:31:05 BST',
+        title: 'Envelope Dispatched to Signer 1 (Internal TLS Route)',
+        detail: 'First sequential routing node unlocked under ICT Act Section 7 rules',
+        type: 'dispatch',
+      },
+      {
+        time: '09:30:40 BST',
+        title: 'Document Initialized & Form Fields Assigned',
+        detail: '2 Signer blocks, 4 initial tags, 1 stamp coordinates pinned • Template: BD-COMM-2024',
+        type: 'config',
+      },
+      {
+        time: '09:30:00 BST',
+        title: 'Envelope Created & Uploaded by Ayesha Rahman',
+        detail: 'Original Draft Hash: e3b0c44298fc1c14...855 registered in Dhaka Vault',
+        type: 'create',
       },
     ],
   };
@@ -121,413 +160,416 @@ function DocumentDetailContent() {
     }
   };
 
-  const handleCorrect = () => {
-    if (confirm('Recall this envelope to make corrections? Active signer links will be invalidated and envelope will revert to Draft v2.')) {
-      setVersion((v) => v + 1);
-      alert('Envelope recalled as Draft v' + (version + 1) + '. You can now adjust fields and recipients.');
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      const fullUrl = `${window.location.origin}${doc.signers[1].tokenLink}`;
+      navigator.clipboard.writeText(fullUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
     }
   };
 
-  const handleVerify = () => {
-    setVerifying(true);
-    setTimeout(() => {
-      setVerifying(false);
-      setVerifyResult({
-        verified: true,
-        hash: doc.finalHash,
-        chainValid: true,
-      });
-    }, 700);
-  };
-
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-6">
-        <div className="space-y-1">
-          <Link href="/documents" className="text-xs font-semibold text-pine-600 hover:underline flex items-center gap-1">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Documents Repository
+    <div className="min-h-[calc(100vh-140px)] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+      {/* Breadcrumbs & Envelope ID */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="flex items-center gap-2 text-xs font-mono text-ink-soft">
+          <Link href="/documents" className="flex items-center gap-1 hover:text-pine-900 transition-colors">
+            <FolderOpen className="w-3.5 h-3.5 text-pine-600" />
+            <span>Documents</span>
           </Link>
-          <div className="flex items-center gap-3 pt-1">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-pine-900">
-              {doc.title}
-            </h1>
-            <Badge variant={doc.status === 'voided' ? 'voided' : 'waiting'}>
-              {doc.status}
-            </Badge>
-            <span className="text-xs font-mono font-bold bg-pine-100 text-pine-900 px-2 py-0.5 rounded border border-pine-500/20">
-              v{version}
-            </span>
-          </div>
-          <div className="text-xs font-mono text-ink-faint flex flex-wrap items-center gap-4 pt-1">
-            <span>ID: {doc.id}</span>
-            <span>Sent: 10 Nov 2026, 20:25 BST</span>
-            <span>Expires: 24 Nov 2026</span>
-          </div>
+          <span>&gt;</span>
+          <span>Commercial Supply Contracts</span>
+          <span>&gt;</span>
+          <span className="font-semibold text-pine-900 truncate max-w-xs">{doc.title}</span>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleVerify} disabled={verifying}>
-            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-pine-700" />
-            {verifying ? 'Verifying...' : 'Verify Cryptographic Hash'}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleCorrect} disabled={isVoided}>
-            <RotateCcw className="w-3.5 h-3.5 mr-1" />
-            Correct & Resend
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleRemind} disabled={isVoided}>
-            <Bell className="w-3.5 h-3.5 mr-1" />
-            Send Reminder
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExtend} disabled={isVoided}>
-            <Calendar className="w-3.5 h-3.5 mr-1" />
-            Extend 7 Days
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleVoid} disabled={isVoided}>
-            <Ban className="w-3.5 h-3.5 mr-1" />
-            Void Envelope
-          </Button>
+        <div className="flex items-center gap-2 text-xs font-mono text-ink-faint">
+          <Hash className="w-3.5 h-3.5 text-pine-600" />
+          <span>{doc.id}</span>
+          <span>•</span>
+          <span>Created {doc.createdBST}</span>
         </div>
       </div>
 
-      {/* Verification Result Banner */}
-      {verifyResult && (
-        <div className="p-4 bg-pine-100/80 border border-pine-500/30 text-pine-900 rounded-[8px] text-xs space-y-1">
-          <div className="flex items-center justify-between font-bold text-sm">
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-pine-700" />
-              Cryptographic Integrity Verified (Untampered)
+      {/* Header & Quick Action Toolbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-pine-900 tracking-tight">
+              {doc.title}
+            </h1>
+            <span
+              className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
+                isVoided
+                  ? 'bg-danger-bg text-danger border-danger/30'
+                  : 'bg-amber-100 text-amber-900 border-amber-300'
+              }`}
+            >
+              {doc.status}
             </span>
-            <span className="text-[11px] font-mono text-pine-800">ICT Act 2006 (Sec. 7)</span>
           </div>
-          <p className="text-ink-soft">
-            Recomputed SHA-256 matches stored final hash. All {doc.auditEvents.length} events in the Merkle audit chain are unbroken and authentic.
-          </p>
-          <div className="font-mono text-[11px] bg-paper p-2 rounded border border-border mt-1">
-            Digest: {verifyResult.hash}
+          <p className="text-xs text-ink-soft">{doc.subtitle}</p>
+        </div>
+
+        {/* Action Toolbar */}
+        <div className="flex flex-wrap items-center gap-2">
+          {!isVoided && (
+            <button
+              type="button"
+              onClick={handleRemind}
+              className="px-3.5 py-2 rounded-xl bg-pine-900 hover:bg-pine-800 text-paper text-xs font-bold flex items-center gap-1.5 transition-all shadow-warm-sm"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              <span>{remindedSent ? 'Reminder Dispatched!' : 'Remind Tanvir'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => alert('Downloading interim draft PDF with cryptographic watermark...')}
+            className="px-3 py-2 rounded-xl border border-border bg-surface hover:bg-surface-raised text-pine-900 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-warm-sm"
+          >
+            <Download className="w-3.5 h-3.5 text-pine-600" />
+            <span>Download Draft</span>
+          </button>
+
+          <Link href={`/envelopes/${doc.id}/prepare`}>
+            <button
+              type="button"
+              className="px-3 py-2 rounded-xl border border-border bg-surface hover:bg-surface-raised text-pine-900 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-warm-sm"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-pine-600" />
+              <span>Correct &amp; Resend</span>
+            </button>
+          </Link>
+
+          {!isVoided && (
+            <button
+              type="button"
+              onClick={handleExtend}
+              className="px-3 py-2 rounded-xl border border-border bg-surface hover:bg-surface-raised text-pine-900 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-warm-sm"
+            >
+              <Calendar className="w-3.5 h-3.5 text-pine-600" />
+              <span>{extendedNotice ? 'Extended (+7 Days)!' : 'Extend (Nov 07)'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="p-2 rounded-xl border border-border bg-surface hover:bg-surface-raised text-pine-900 text-xs transition-all shadow-warm-sm"
+            title="Copy Signer Link"
+          >
+            {copiedLink ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-pine-600" />}
+          </button>
+
+          {!isVoided && (
+            <button
+              type="button"
+              onClick={handleVoid}
+              className="p-2 rounded-xl border border-danger/30 bg-danger-bg hover:bg-danger/20 text-danger text-xs transition-all"
+              title="Void / Cancel Envelope"
+            >
+              <Ban className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Top 4 Metrics & Statutory Overview */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metric 1: Progress */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-warm-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-ink-soft">
+            <span className="font-semibold text-pine-900">Signing Progress</span>
+            <span className="font-mono text-emerald-700 font-bold">50% Completed</span>
+          </div>
+          <div className="w-full bg-paper rounded-full h-2 border border-border overflow-hidden">
+            <div className="bg-pine-600 h-full rounded-full w-1/2" />
+          </div>
+          <div className="text-[11px] text-ink-soft flex items-center justify-between font-mono">
+            <span>1 of 2 Signatures Executed</span>
+            <span className="text-amber-800 font-bold">Step 2 Active</span>
           </div>
         </div>
-      )}
 
-      {remindedSent && (
-        <div className="p-3 bg-[#E2F2E8] border border-success/30 text-success rounded-[8px] text-xs flex items-center gap-2 font-semibold">
-          <CheckCircle2 className="w-4 h-4" />
-          Reminder dispatched to Rahim Chowdhury (rahim@horizon-logistics.bd).
+        {/* Metric 2: Validity Window */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-warm-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-ink-soft">
+            <span className="font-semibold text-pine-900">Validity Window</span>
+            <Clock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="font-display text-2xl font-bold text-pine-900">4 Days left</div>
+          <div className="text-[11px] text-ink-faint font-mono">
+            Expires 28 Oct 2024, 23:59 BST
+          </div>
         </div>
-      )}
 
-      {extendedNotice && (
-        <div className="p-3 bg-pine-100 border border-pine-500/20 text-pine-900 rounded-[8px] text-xs flex items-center gap-2 font-semibold">
-          <Clock className="w-4 h-4" />
-          Envelope expiration extended by 7 days.
+        {/* Metric 3: Statutory Authority */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-warm-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-ink-soft">
+            <span className="font-semibold text-pine-900">Statutory Authority</span>
+            <Scale className="w-4 h-4 text-pine-600" />
+          </div>
+          <div className="font-mono text-xs font-bold text-emerald-800">
+            ICT Act 2006 §7 Compliant
+          </div>
+          <div className="text-[11px] text-ink-faint font-mono truncate">
+            Class-3 PKI SHA-256 Vaulted
+          </div>
         </div>
-      )}
 
-      {/* Recipient Hierarchy Stepper Card */}
-      <Card className="bg-surface">
-        <CardHeader className="pb-3 border-b border-border">
-          <CardTitle className="text-lg">Signer Routing & Execution Sequence</CardTitle>
-          <CardDescription>Sequential execution: Signer 2 is gated until Signer 1 executes</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid sm:grid-cols-2 gap-6">
-            {doc.signers.map((signer) => (
-              <div
-                key={signer.order}
-                className="p-4 bg-paper rounded-[8px] border border-border space-y-2 relative"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-pine-900 text-paper font-bold text-xs flex items-center justify-center">
-                      {signer.order}
-                    </span>
-                    <span className="font-bold text-sm text-pine-900">{signer.name}</span>
-                  </div>
-                  <Badge variant={signer.status === 'notified' ? 'waiting' : 'draft'}>
-                    {signer.status === 'notified' ? 'Active Signer' : 'Pending Turn'}
-                  </Badge>
-                </div>
-                <div className="text-xs text-ink-soft font-mono">{signer.email}</div>
-                <div className="text-[11px] text-ink-faint pt-1 space-y-0.5">
-                  <div>Status: {signer.status === 'notified' ? 'Dispatched via Magic Link' : 'Gated by predecessor'}</div>
-                  {signer.notifiedAt && <div>Notified: {signer.notifiedAt}</div>}
-                  {signer.ip && <div>IP: {signer.ip}</div>}
-                </div>
-                <div className="pt-2 flex items-center justify-between border-t border-border">
-                  <span className="text-[11px] text-ink-faint">Direct Signing Link:</span>
-                  <Link href={`/sign/${signer.token}`} target="_blank">
-                    <Button variant="ghost" size="sm" className="h-7 text-xs text-pine-600 font-semibold">
-                      Test Signer Portal
-                      <ExternalLink className="w-3 h-3 ml-1" />
-                    </Button>
-                  </Link>
-                </div>
+        {/* Metric 4: Instrument Value */}
+        <div className="bg-surface rounded-2xl border border-border p-5 shadow-warm-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-ink-soft">
+            <span className="font-semibold text-pine-900">Instrument Value</span>
+            <Award className="w-4 h-4 text-brass-600" />
+          </div>
+          <div className="font-display text-2xl font-bold text-pine-900">{doc.valueBDT}</div>
+          <div className="text-[11px] text-ink-faint font-mono truncate">
+            {doc.lcRef}
+          </div>
+        </div>
+      </div>
+
+      {/* Sequential Execution Protocol (Signer Chain) */}
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-warm-sm space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-border pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-pine-600" />
+            <h2 className="font-display text-lg font-bold text-pine-900">
+              Sequential Execution Protocol
+            </h2>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full font-mono">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Enforced under Section 7, ICT Act 2006 (Bangladesh)</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Signer 1: Done */}
+          <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-300 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="w-6 h-6 rounded-full bg-emerald-700 text-paper text-xs font-bold font-mono flex items-center justify-center">
+                1
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">
+                <Check className="w-3 h-3 text-emerald-600" /> Executed &amp; Affixed
+              </span>
+            </div>
+            <div>
+              <strong className="text-xs text-pine-900 font-bold block">{doc.signers[0].name}</strong>
+              <span className="text-[11px] text-ink-soft block">{doc.signers[0].role}</span>
+              <span className="text-[11px] font-mono text-ink-faint">{doc.signers[0].email}</span>
+            </div>
+            <div className="pt-2 border-t border-emerald-200 text-[11px] text-ink-soft space-y-1 font-mono">
+              <div className="flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>{doc.signers[0].completedAt}</span>
               </div>
-            ))}
+              <div className="text-[10px] text-ink-faint">IP: {doc.signers[0].ip}</div>
+              <div className="text-[10px] text-emerald-700">{doc.signers[0].nidVerified}</div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Tabs */}
-      <div className="space-y-6">
-        <div className="flex border-b border-border text-sm font-semibold">
+          {/* Signer 2: Current Turn */}
+          <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-300 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="w-6 h-6 rounded-full bg-amber-600 text-paper text-xs font-bold font-mono flex items-center justify-center">
+                2
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">
+                <Clock className="w-3 h-3 text-amber-700" /> Awaiting Signature
+              </span>
+            </div>
+            <div>
+              <strong className="text-xs text-pine-900 font-bold block">{doc.signers[1].name}</strong>
+              <span className="text-[11px] text-ink-soft block">{doc.signers[1].role}</span>
+              <span className="text-[11px] font-mono text-ink-faint">{doc.signers[1].email}</span>
+            </div>
+            <div className="pt-2 border-t border-amber-200 text-[11px] text-ink-soft space-y-1 font-mono">
+              <div className="text-[10px] text-amber-900">
+                Last viewed: {doc.signers[1].lastViewed}
+              </div>
+              <div className="text-[10px] text-ink-faint">IP: {doc.signers[1].ip}</div>
+            </div>
+            <div className="pt-2 flex items-center gap-2">
+              <Link href={doc.signers[1]?.tokenLink || `/sign/demo_token_tanvir_4b5c6d7e8f9a0b1c`} target="_blank" className="flex-1">
+                <button className="w-full py-1.5 px-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-[11px] font-semibold flex items-center justify-center gap-1 transition-all">
+                  <span>Signer Chamber</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </Link>
+              <button
+                onClick={handleCopyLink}
+                className="p-1.5 rounded-lg border border-border bg-surface text-ink-soft hover:text-pine-900"
+                title="Copy Magic Link"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Observer / CC */}
+          <div className="p-4 bg-paper rounded-xl border border-border space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="w-6 h-6 rounded-full bg-ink-faint text-paper text-xs font-bold font-mono flex items-center justify-center">
+                CC
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-border text-ink-soft font-bold">
+                Observer
+              </span>
+            </div>
+            <div>
+              <strong className="text-xs text-pine-900 font-bold block">{doc.signers[2].name}</strong>
+              <span className="text-[11px] text-ink-soft block">{doc.signers[2].role}</span>
+              <span className="text-[11px] font-mono text-ink-faint">{doc.signers[2].email}</span>
+            </div>
+            <p className="pt-2 border-t border-border text-[10px] text-ink-soft leading-relaxed">
+              {doc.signers[2].note}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs: Forensic Timeline vs Files & Certified Attachments */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 border-b border-border pb-2 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('timeline')}
-            className={`py-3 px-4 border-b-2 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-all ${
               activeTab === 'timeline'
-                ? 'border-pine-900 text-pine-900'
-                : 'border-transparent text-ink-soft hover:text-ink'
+                ? 'bg-pine-900 text-paper shadow-sm'
+                : 'text-ink-soft hover:text-pine-900'
             }`}
           >
-            Forensic Audit Trail (SHA-256 Ledger)
+            Timeline &amp; Forensic Events (6)
           </button>
           <button
             onClick={() => setActiveTab('files')}
-            className={`py-3 px-4 border-b-2 transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-all ${
               activeTab === 'files'
-                ? 'border-pine-900 text-pine-900'
-                : 'border-transparent text-ink-soft hover:text-ink'
+                ? 'bg-pine-900 text-paper shadow-sm'
+                : 'text-ink-soft hover:text-pine-900'
             }`}
           >
-            Files & Certificates
-          </button>
-          <button
-            onClick={() => setActiveTab('preview')}
-            className={`py-3 px-4 border-b-2 transition-colors ${
-              activeTab === 'preview'
-                ? 'border-pine-900 text-pine-900'
-                : 'border-transparent text-ink-soft hover:text-ink'
-            }`}
-          >
-            Document Preview
-          </button>
-          <button
-            onClick={() => setActiveTab('certificate')}
-            className={`py-3 px-4 border-b-2 transition-colors ${
-              activeTab === 'certificate'
-                ? 'border-pine-900 text-pine-900'
-                : 'border-transparent text-ink-soft hover:text-ink'
-            }`}
-          >
-            Certificate of Completion
+            Files &amp; Certified Attachments (3)
           </button>
         </div>
 
-        {/* Tab 1: Audit Trail */}
-        {activeTab === 'timeline' && (
-          <Card className="bg-surface">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <div>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-pine-600" />
-                  Append-Only Cryptographic Event Ledger
-                </CardTitle>
-                <CardDescription>
-                  Chained hash verification ensures retroactive modifications are immediately detectable.
-                </CardDescription>
+        {activeTab === 'timeline' ? (
+          <div className="bg-surface rounded-2xl border border-border p-6 shadow-warm-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="text-xs text-ink-soft">
+                Immutable Ledger Logging (RFC 3161 Timestamping) • Root Node Dhaka-01
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => {
-                  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(doc.auditEvents, null, 2));
-                  const downloadAnchor = document.createElement('a');
-                  downloadAnchor.setAttribute('href', dataStr);
-                  downloadAnchor.setAttribute('download', `audit_trail_${doc.id}.json`);
-                  document.body.appendChild(downloadAnchor);
-                  downloadAnchor.click();
-                  downloadAnchor.remove();
-                }}
+              <Link
+                href={`/documents/${doc.id}/audit`}
+                className="text-xs font-bold text-pine-600 hover:text-pine-800 hover:underline flex items-center gap-1"
               >
-                <Download className="w-3.5 h-3.5 mr-1" />
-                Export Audit JSON
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {doc.auditEvents.map((evt, i) => (
-                  <div
-                    key={evt.id}
-                    className="p-4 bg-paper rounded-[8px] border border-border space-y-2 relative"
-                  >
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-pine-900 text-sm">
-                        #{i + 1} {evt.action}
-                      </span>
-                      <span className="font-mono text-ink-faint">{evt.timestamp}</span>
+                <span>View Full Forensic Audit Trail &rarr;</span>
+              </Link>
+            </div>
+
+            <div className="space-y-4">
+              {doc.timelineEvents.map((evt, idx) => (
+                <div key={idx} className="flex items-start gap-3.5 text-xs">
+                  <div className="w-2 h-2 rounded-full bg-pine-600 mt-1.5 shrink-0" />
+                  <div className="space-y-0.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <strong className="text-pine-900 font-semibold">{evt.title}</strong>
+                      <span className="font-mono text-[11px] text-ink-faint">{evt.time}</span>
                     </div>
-                    <div className="text-xs text-ink-soft flex items-center gap-4">
-                      <span>Actor: <strong>{evt.actor}</strong></span>
-                      <span>IP: <code className="font-mono">{evt.ip}</code></span>
-                    </div>
-                    <div className="p-2.5 bg-surface rounded border border-border font-mono text-[11px] text-ink-faint space-y-1">
-                      <div><strong className="text-pine-900">Prev Hash:</strong> {evt.prevHash}</div>
-                      <div><strong className="text-pine-900">Event Digest:</strong> {evt.hash}</div>
-                    </div>
+                    <p className="text-[11px] text-ink-soft font-mono leading-relaxed">
+                      {evt.detail}
+                    </p>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-surface rounded-2xl border border-border p-6 shadow-warm-sm space-y-3">
+            <div className="p-3.5 bg-paper rounded-xl border border-border flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-pine-600" />
+                <div>
+                  <strong className="text-pine-900 block font-semibold">Original Uploaded Contract.pdf</strong>
+                  <span className="text-[11px] text-ink-soft font-mono">1.8 MB • SHA-256: e3b0c44...855</span>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Tab 2: Files & Certificates */}
-        {activeTab === 'files' && (
-          <Card className="bg-surface p-6 space-y-6">
-            <div>
-              <CardTitle className="text-lg">Document Artifacts & Signed Files</CardTitle>
-              <CardDescription>
-                Download verifiable versions of original uploads, final flattened documents, and audit certificates.
-              </CardDescription>
+              <button
+                onClick={() => alert('Original pre-hash verified.')}
+                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold hover:bg-surface-raised"
+              >
+                Download Original
+              </button>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
-                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
-                  <FileText className="w-4 h-4 text-pine-600" />
-                  Original PDF
+            <div className="p-3.5 bg-paper rounded-xl border border-border flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <FileCheck2 className="w-5 h-5 text-pine-600" />
+                <div>
+                  <strong className="text-pine-900 block font-semibold">Executed In-Progress Draft.pdf</strong>
+                  <span className="text-[11px] text-ink-soft font-mono">1.9 MB • 1 of 2 Signatures Affixed</span>
                 </div>
-                <p className="text-xs text-ink-soft">
-                  The original source document uploaded before any signatures were affixed.
-                </p>
-                <div className="text-[11px] font-mono text-ink-faint truncate">
-                  SHA: {doc.originalHash.slice(0, 16)}...
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => alert('Downloading original source PDF...')}
-                >
-                  <Download className="w-3.5 h-3.5 mr-1" />
-                  Download Original
-                </Button>
               </div>
-
-              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
-                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
-                  <ShieldCheck className="w-4 h-4 text-pine-600" />
-                  Final Executed PDF
-                </div>
-                <p className="text-xs text-ink-soft">
-                  Completed document with all embedded signatures, flattened form fields, and attached CoC.
-                </p>
-                <div className="text-[11px] font-mono text-ink-faint truncate">
-                  SHA: {doc.finalHash.slice(0, 16)}...
-                </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => alert('Downloading executed PDF with embedded signatures...')}
-                >
-                  <Download className="w-3.5 h-3.5 mr-1" />
-                  Download Executed
-                </Button>
-              </div>
-
-              <div className="p-4 bg-paper rounded-lg border border-border space-y-3">
-                <div className="flex items-center gap-2 text-pine-900 font-bold text-sm">
-                  <WaxSeal size={18} />
-                  Certificate of Completion
-                </div>
-                <p className="text-xs text-ink-soft">
-                  Standalone legal audit trail certificate with all signatory events and cryptographic hashes.
-                </p>
-                <div className="text-[11px] font-mono text-ink-faint">
-                  ICT Act 2006 Compliant
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => alert('Downloading standalone Certificate of Completion PDF...')}
-                >
-                  <Download className="w-3.5 h-3.5 mr-1" />
-                  Download Certificate
-                </Button>
-              </div>
+              <button
+                onClick={() => alert('Watermarked interim draft downloaded.')}
+                className="px-3 py-1.5 rounded-lg border border-border bg-surface text-xs font-semibold hover:bg-surface-raised"
+              >
+                Download Interim
+              </button>
             </div>
-          </Card>
-        )}
 
-        {/* Tab 3: Document Preview */}
-        {activeTab === 'preview' && (
-          <Card className="bg-surface text-center p-8 space-y-4">
-            <div className="p-8 bg-[#E9E4D8] rounded-[8px] flex justify-center">
-              <div className="w-[480px] h-[640px] bg-white shadow-warm-md p-8 text-left space-y-4 text-ink-soft text-xs border border-border">
-                <div className="border-b border-border pb-2 font-bold text-sm text-pine-900">
-                  MUTUAL NON-DISCLOSURE AGREEMENT
-                </div>
-                <p>
-                  This Non-Disclosure Agreement is executed this 10th day of November 2026,
-                  by and between Apex Commerce BD and Horizon Logistics Ltd.
-                </p>
-                <div className="pt-24 grid grid-cols-2 gap-8 text-[11px]">
-                  <div className="border border-dashed border-pine-600/40 p-3 rounded text-center">
-                    <span className="text-pine-600 font-semibold block">Signature Area</span>
-                    <span className="text-[10px] text-ink-faint">Rahim Chowdhury (Signer 1)</span>
-                  </div>
-                  <div className="border border-dashed border-border p-3 rounded text-center opacity-60">
-                    <span className="font-semibold block">Signature Area</span>
-                    <span className="text-[10px] text-ink-faint">Karimul Islam (Signer 2)</span>
-                  </div>
+            <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-300 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3">
+                <Award className="w-5 h-5 text-brass-600" />
+                <div>
+                  <strong className="text-pine-900 block font-semibold">Certificate of Completion</strong>
+                  <span className="text-[11px] text-ink-soft font-mono">PKI Legal Attestation • Admissible under ICT Act 2006 §7</span>
                 </div>
               </div>
+              <Link href={`/documents/${doc.id}/certificate`}>
+                <button className="px-3 py-1.5 rounded-lg bg-pine-900 text-paper text-xs font-semibold hover:bg-pine-800">
+                  Preview Certificate &rarr;
+                </button>
+              </Link>
             </div>
-          </Card>
+          </div>
         )}
+      </div>
 
-        {/* Tab 4: Certificate of Completion */}
-        {activeTab === 'certificate' && (
-          <Card className="bg-surface p-8 space-y-6">
-            <div className="border-4 border-double border-border-strong p-8 rounded-[8px] space-y-6 text-center bg-paper/50">
-              <WaxSeal size={72} className="mx-auto" />
-              <div className="space-y-1">
-                <span className="text-xs font-mono uppercase tracking-widest text-ink-faint">
-                  Bangladesh ICT Act 2006 • Section 7 Attestation
-                </span>
-                <h2 className="font-display text-3xl font-bold text-pine-900">
-                  Certificate of Completion
-                </h2>
-                <p className="text-xs text-ink-soft font-mono">
-                  Envelope Serial: {doc.id} · BST Atomic Timestamp
-                </p>
-              </div>
+      {/* Interim Document Parchment Viewer Preview */}
+      <div className="bg-surface rounded-2xl border border-border p-6 shadow-warm-sm space-y-4">
+        <div className="flex items-center justify-between text-xs border-b border-border pb-3">
+          <div className="flex items-center gap-2 font-bold text-pine-900">
+            <FileText className="w-4 h-4 text-pine-600" />
+            <span>Interim Document View (Page 1 of 3)</span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">
+            INTERIM EXECUTION WATERMARK
+          </span>
+        </div>
 
-              <div className="text-left text-xs space-y-4 max-w-xl mx-auto pt-4 border-t border-border">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-ink-faint block">Document Name:</span>
-                    <strong className="text-pine-900">{doc.title}</strong>
-                  </div>
-                  <div>
-                    <span className="text-ink-faint block">Original Genesis SHA-256:</span>
-                    <code className="font-mono text-[11px] break-all">{doc.originalHash}</code>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-surface rounded border border-border space-y-2">
-                  <div className="font-bold text-pine-900">Statutory Disclosure & Assent:</div>
-                  <p className="text-[11px] text-ink-soft leading-relaxed">
-                    All parties consented to do business electronically in accordance with the Electronic Record
-                    and Signature Disclosure v1.0. Signatures affixed via SignDesk Simple Electronic Signature (SES). Not legal advice.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button variant="primary" onClick={() => alert('Downloading certified document bundle...')}>
-                  <Download className="w-4 h-4 mr-1.5" />
-                  Download Certified PDF & Certificate
-                </Button>
-              </div>
-            </div>
-          </Card>
-        )}
+        <div className="bg-paper p-8 rounded-xl border border-border/80 space-y-4 text-xs select-none">
+          <div className="text-center space-y-1 border-b border-border pb-3">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-ink-faint">
+              Contract No: RT-MDC-2024-098 • Dated: 24 October 2024
+            </span>
+            <h3 className="font-display text-base font-bold text-pine-900">
+              COMMERCIAL SUPPLY AGREEMENT
+            </h3>
+            <p className="text-[11px] text-ink-soft">
+              Between Rahim Textiles &amp; Trade Ltd. (First Party - Affixed) vs Meghna Distribution Corp. (Second Party - In Progress)
+            </p>
+          </div>
+          <p className="text-[11px] text-ink-soft leading-relaxed">
+            This bilateral instrument is currently undergoing sequential signing. Party 1 has cryptographically sealed their signature with PKI token credentials. Full execution will conclude upon Party 2 countersignature.
+          </p>
+        </div>
       </div>
     </div>
   );
