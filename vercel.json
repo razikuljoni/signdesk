@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "pnpm --filter @signdesk/shared build && pnpm --filter @signdesk/web build",
+  "buildCommand": "pnpm --filter @signdesk/shared build && pnpm --filter @signdesk/web build && rm -rf .next && cp -R apps/web/.next .next",
   "outputDirectory": "apps/web/.next",
   "headers": [
     {
