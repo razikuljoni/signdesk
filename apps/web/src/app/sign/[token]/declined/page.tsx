@@ -3,115 +3,134 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   XCircle,
   FileText,
   Mail,
-  AlertTriangle,
   ArrowLeft,
-  ShieldAlert,
+  AlertTriangle,
+  Scale,
+  Clock,
+  Phone,
+  Building2,
 } from 'lucide-react';
 
 export default function SignDeclinedPage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = (params.token as string) || 'demo_token';
 
-  const isRahim = token.includes('rahim');
-  const signerName = isRahim ? 'Rahim Chowdhury' : 'Karimul Islam';
-  const signerEmail = isRahim ? 'rahim@horizon-logistics.bd' : 'karim@apex-commerce.bd';
-  const senderEmail = 'tanvir@apex-commerce.bd';
-  const documentTitle = 'Mutual Non-Disclosure Agreement — Horizon Logistics';
+  const targetDoc = 'Rahim Traders — Commercial Supply Agreement (#ENV-BD-2024-8849-ICT)';
+  const decliningSignatory = 'Tanvir Ahmed (Managing Director, Meghna Distribution Corp.)';
+  const timestamp = '24 Oct 2024, 11:30:15 BST';
+  const rejectionGrounds =
+    'Clause 14 indemnity needs revision — liability cap needs to align with bilateral 5% agreement rather than unilateral indemnification';
+  const senderContact = {
+    name: 'Ayesha Rahman',
+    email: 'ayesha.rahman@rahimtraders.com',
+    phone: '+880 1711-884920',
+  };
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Top Header */}
       <div className="max-w-3xl mx-auto w-full flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-seal-600 flex items-center justify-center text-white text-xs font-bold">
-            •
-          </div>
-          <span className="font-body font-bold text-lg text-pine-900">SignDesk</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-danger bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20 font-semibold">
-          <ShieldAlert className="w-3.5 h-3.5" />
-          <span>Execution Voided by Decline</span>
+        <Link href="/" className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
+          <WaxSeal size={28} />
+          <span>SignDesk</span>
+        </Link>
+        <div className="flex items-center gap-1.5 text-xs text-vermilion bg-vermilion/10 px-2.5 py-1 rounded-full border border-vermilion/30 font-semibold font-mono">
+          <XCircle className="w-3.5 h-3.5" />
+          <span>DECLINATION RECORDED</span>
         </div>
       </div>
 
-      {/* Main Decline Card */}
+      {/* Main Declined Card */}
       <div className="max-w-2xl mx-auto w-full my-8">
-        <Card className="bg-surface border-border shadow-warm-md p-6 sm:p-10 space-y-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-danger/10 text-danger flex items-center justify-center mx-auto border border-danger/20">
+        <div className="bg-surface rounded-2xl border-2 border-border shadow-warm p-6 sm:p-10 space-y-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-vermilion/10 text-vermilion flex items-center justify-center mx-auto border border-vermilion/30">
             <XCircle className="w-8 h-8" />
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-danger">
-              Execution Suspended
+            <span className="text-xs font-mono uppercase tracking-widest text-vermilion font-bold">
+              Signatory Non-Assent Registered
             </span>
-            <h1 className="font-display text-3xl font-bold text-pine-900">
-              You Have Declined to Sign
+            <h1 className="font-serif text-3xl font-bold text-pine-900">
+              This Envelope Was Declined
             </h1>
-            <p className="text-sm text-ink-soft max-w-md mx-auto">
-              You chose not to execute this agreement. The sender has been notified immediately and all pending signing links for this workflow have been invalidated.
+            <p className="text-xs text-ink-soft max-w-md mx-auto">
+              Formal declination has been logged into the audit ledger under Section 7 of the Bangladesh ICT Act 2006.
             </p>
           </div>
 
-          {/* Decline Details */}
-          <div className="bg-surface-raised border border-border rounded-[8px] p-5 text-left space-y-3 text-xs">
-            <div className="border-b border-border pb-2 flex items-center justify-between">
-              <span className="font-semibold text-pine-900 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-pine-600" />
-                {documentTitle}
-              </span>
-              <span className="text-[11px] font-mono text-danger font-semibold">Status: Declined</span>
+          {/* Formal Declination Record */}
+          <div className="p-5 rounded-xl bg-paper border border-border text-left space-y-3 text-xs">
+            <div className="pb-2 border-b border-border font-serif font-bold text-pine-900 text-sm">
+              Formal Declination Record
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="space-y-2">
               <div>
-                <span className="text-ink-faint block">Declined By:</span>
-                <strong className="text-pine-900 text-sm">{signerName}</strong>
-                <span className="text-[11px] font-mono text-ink-soft block">{signerEmail}</span>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Target Document:</span>
+                <div className="font-mono text-xs text-pine-900 font-medium">{targetDoc}</div>
               </div>
-              <div>
-                <span className="text-ink-faint block">Sender Contact:</span>
-                <strong className="text-pine-900 text-sm">Tanvir Ahmed</strong>
-                <span className="text-[11px] font-mono text-ink-soft block">{senderEmail}</span>
-              </div>
-            </div>
 
-            <div className="p-3 bg-paper rounded border border-border mt-2 space-y-1">
-              <span className="text-ink-faint block font-semibold">Recorded Reason:</span>
-              <p className="text-ink italic">
-                &ldquo;Incorrect commercial terms or details — please update clause 4.2 before proceeding.&rdquo;
-              </p>
+              <div>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Declining Signatory:</span>
+                <div className="text-pine-900 font-semibold">{decliningSignatory}</div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Verbatim Rejection Grounds:</span>
+                <blockquote className="italic font-serif text-ink-soft mt-0.5 border-l-2 border-vermilion pl-2.5">
+                  &ldquo;{rejectionGrounds}&rdquo;
+                </blockquote>
+              </div>
+
+              <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] font-mono text-ink-faint">
+                <span>Declination Timestamp:</span>
+                <span className="text-pine-900 font-medium">{timestamp}</span>
+              </div>
             </div>
           </div>
 
-          {/* CTAs */}
-          <div className="space-y-3 pt-2">
-            <a href={`mailto:${senderEmail}?subject=Declined:%20${encodeURIComponent(documentTitle)}`} className="w-full block">
-              <Button variant="outline" size="lg" className="w-full text-xs font-bold">
-                <Mail className="w-4 h-4 mr-2" />
-                Email Sender Directly
-              </Button>
-            </a>
+          {/* Actionable Next Steps & Contact Card */}
+          <div className="p-4 rounded-xl bg-paper border border-border text-left space-y-2 text-xs">
+            <div className="font-semibold text-pine-900">
+              Sender Notified & Next Steps
+            </div>
+            <p className="text-[11px] text-ink-soft leading-relaxed">
+              Ayesha Rahman has been immediately notified via corporate email and WhatsApp with your exact comments. A revised agreement reflecting the updated indemnity clause will be re-issued for bilateral execution.
+            </p>
+            <div className="pt-2 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-mono text-ink-soft">
+              <div>Direct Contact: <strong className="text-pine-900">{senderContact.name}</strong></div>
+              <div className="flex items-center gap-3">
+                <a href={`mailto:${senderContact.email}`} className="text-pine-900 hover:underline">
+                  {senderContact.email}
+                </a>
+                <span>•</span>
+                <a href={`tel:${senderContact.phone}`} className="text-pine-900 hover:underline">
+                  {senderContact.phone}
+                </a>
+              </div>
+            </div>
+          </div>
 
-            <Link href="/" className="w-full block">
-              <Button variant="ghost" size="sm" className="w-full text-xs text-ink-soft">
-                <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                Return to SignDesk Home
-              </Button>
+          {/* Action Button */}
+          <div className="pt-2">
+            <Link href="/dashboard" className="block">
+              <button className="w-full py-3 px-6 rounded-xl bg-pine-900 hover:bg-pine-800 text-paper font-bold text-xs shadow-warm transition-all">
+                Return to SignDesk Home / Dashboard
+              </button>
             </Link>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Footer */}
-      <div className="max-w-3xl mx-auto w-full text-center text-xs text-ink-faint border-t border-border pt-4">
-        SignDesk • Secure Bangladeshi E-Signature Platform
+      <div className="max-w-3xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
+        SignDesk Sovereign Audit Ledger • Event #DECLINE-BD-2024-8849
       </div>
     </div>
   );

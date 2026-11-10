@@ -3,113 +3,127 @@
 import React from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Ban,
   FileText,
   Mail,
   ArrowLeft,
   ShieldOff,
+  Scale,
+  Clock,
+  Building2,
+  Lock,
 } from 'lucide-react';
 
 export default function SignVoidedPage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = (params.token as string) || 'demo_token';
 
-  const isRahim = token.includes('rahim');
-  const signerName = isRahim ? 'Rahim Chowdhury' : 'Karimul Islam';
-  const documentTitle = 'Mutual Non-Disclosure Agreement — Horizon Logistics';
-  const senderName = 'Tanvir Ahmed (Apex Commerce BD)';
-  const senderEmail = 'tanvir@apex-commerce.bd';
+  const revokingAuthority = 'Ayesha Rahman (Managing Director, Rahim Textiles & Trade Ltd.)';
+  const targetEnvelope = 'Rahim Traders — Commercial Supply Agreement (#ENV-BD-2024-8849-ICT)';
+  const formalReason =
+    'Terms superseded by updated commercial invoice and revised Incoterms 2020 delivery schedule';
+  const timestamp = '24 Oct 2024, 11:32:00 BST';
+  const senderEmail = 'ayesha.rahman@rahimtraders.com';
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Top Header */}
       <div className="max-w-3xl mx-auto w-full flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-seal-600 flex items-center justify-center text-white text-xs font-bold">
-            •
-          </div>
-          <span className="font-body font-bold text-lg text-pine-900">SignDesk</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-danger bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20 font-semibold">
+        <Link href="/" className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
+          <WaxSeal size={28} />
+          <span>SignDesk</span>
+        </Link>
+        <div className="flex items-center gap-1.5 text-xs text-vermilion bg-vermilion/10 px-2.5 py-1 rounded-full border border-vermilion/30 font-semibold font-mono">
           <ShieldOff className="w-3.5 h-3.5" />
-          <span>Envelope Voided</span>
+          <span>REVOCATION REGISTERED</span>
         </div>
       </div>
 
       {/* Main Voided Card */}
       <div className="max-w-2xl mx-auto w-full my-8">
-        <Card className="bg-surface border-border shadow-warm-md p-6 sm:p-10 space-y-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-danger/10 text-danger flex items-center justify-center mx-auto border border-danger/20">
+        <div className="bg-surface rounded-2xl border-2 border-border shadow-warm p-6 sm:p-10 space-y-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-vermilion/10 text-vermilion flex items-center justify-center mx-auto border border-vermilion/30">
             <Ban className="w-8 h-8" />
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-danger">
-              Execution Cancelled
+            <span className="text-xs font-mono uppercase tracking-widest text-vermilion font-bold">
+              Execution Nullified • Nonce Cancelled
             </span>
-            <h1 className="font-display text-3xl font-bold text-pine-900">
-              Envelope Has Been Voided
+            <h1 className="font-serif text-3xl font-bold text-pine-900">
+              This Envelope Was Voided by the Sender
             </h1>
-            <p className="text-sm text-ink-soft max-w-md mx-auto">
-              The sender voided this envelope. Under Bangladesh legal evidentiary rules, all prior actions, tokens, and partial signatures for this workflow are now null and void.
+            <p className="text-xs text-ink-soft max-w-md mx-auto">
+              The initiator has cancelled this execution workflow. All pending signature nonces have been revoked with CCA Bangladesh registry.
             </p>
           </div>
 
-          {/* Voided Details */}
-          <div className="bg-surface-raised border border-border rounded-[8px] p-5 text-left space-y-3 text-xs">
-            <div className="border-b border-border pb-2 flex items-center justify-between">
-              <span className="font-semibold text-pine-900 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-pine-600" />
-                {documentTitle}
-              </span>
-              <span className="text-[11px] font-mono text-danger font-semibold">Status: Voided</span>
+          {/* Revocation Particulars Card */}
+          <div className="p-5 rounded-xl bg-paper border border-border text-left space-y-3 text-xs">
+            <div className="pb-2 border-b border-border font-serif font-bold text-pine-900 text-sm">
+              Revocation Particulars & Formal Record
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="space-y-2">
               <div>
-                <span className="text-ink-faint block">Recipient:</span>
-                <strong className="text-pine-900 text-sm">{signerName}</strong>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Revoking Authority:</span>
+                <div className="text-pine-900 font-semibold">{revokingAuthority}</div>
               </div>
-              <div>
-                <span className="text-ink-faint block">Voided By Sender:</span>
-                <strong className="text-pine-900 text-sm">{senderName}</strong>
-                <span className="text-[11px] font-mono text-ink-soft block">{senderEmail}</span>
-              </div>
-            </div>
 
-            <div className="p-3 bg-paper rounded border border-border mt-2 space-y-1">
-              <span className="text-ink-faint block font-semibold">Sender&apos;s Void Reason:</span>
-              <p className="text-ink italic">
-                &ldquo;Commercial terms updated in newer version. Please discard this link.&rdquo;
-              </p>
+              <div>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Target Instrument:</span>
+                <div className="font-mono text-xs text-pine-900">{targetEnvelope}</div>
+              </div>
+
+              <div>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Formal Stated Reason:</span>
+                <blockquote className="italic font-serif text-ink-soft mt-0.5 border-l-2 border-vermilion pl-2.5">
+                  &ldquo;{formalReason}&rdquo;
+                </blockquote>
+              </div>
+
+              <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] font-mono text-ink-faint">
+                <span>Revocation BST Timestamp:</span>
+                <span className="text-pine-900 font-medium">{timestamp}</span>
+              </div>
             </div>
           </div>
 
-          {/* CTAs */}
+          {/* Plain-Language Legal Comfort */}
+          <div className="p-4 rounded-xl bg-pine-50/60 border border-pine-200/80 text-left text-xs text-pine-900 space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold">
+              <Scale className="w-4 h-4 text-pine-800" />
+              <span>Statutory Notice & Zero Legal Liability</span>
+            </div>
+            <p className="text-[11px] text-pine-800 leading-relaxed">
+              Zero legal liability accrues to recipients. Any partial tokens or preliminary initial marks have been permanently struck from execution. Immutable draft logs are preserved for 7 years under statutory audit rules.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
           <div className="space-y-3 pt-2">
-            <a href={`mailto:${senderEmail}?subject=Question%20about%20voided%20envelope`} className="w-full block">
-              <Button variant="outline" size="lg" className="w-full text-xs font-bold">
-                <Mail className="w-4 h-4 mr-2" />
-                Contact Sender
-              </Button>
-            </a>
-
-            <Link href="/" className="w-full block">
-              <Button variant="ghost" size="sm" className="w-full text-xs text-ink-soft">
-                <ArrowLeft className="w-3.5 h-3.5 mr-1" />
-                Return to SignDesk Home
-              </Button>
+            <Link href="/dashboard" className="block">
+              <button className="w-full py-3 px-6 rounded-xl bg-pine-900 hover:bg-pine-800 text-paper font-bold text-xs shadow-warm transition-all">
+                Return to SignDesk Home / Dashboard
+              </button>
             </Link>
+
+            <a
+              href={`mailto:${senderEmail}`}
+              className="inline-flex items-center gap-1.5 text-xs text-pine-900 font-semibold hover:underline"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Contact Initiator ({senderEmail})</span>
+            </a>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* Footer */}
-      <div className="max-w-3xl mx-auto w-full text-center text-xs text-ink-faint border-t border-border pt-4">
-        SignDesk • Secure Bangladeshi E-Signature Platform
+      <div className="max-w-3xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
+        SignDesk Bangladesh PKI Network • Audit Proof #VOID-BD-2024-8849
       </div>
     </div>
   );

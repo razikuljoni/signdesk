@@ -3,9 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   ShieldCheck,
@@ -16,24 +13,28 @@ import {
   AlertOctagon,
   Lock,
   Calendar,
+  Building2,
+  CheckCircle2,
+  ChevronRight,
+  Scale,
+  XCircle,
 } from 'lucide-react';
 
 export default function SignLandingPage() {
   const params = useParams();
   const router = useRouter();
-  const token = params.token as string;
+  const token = (params.token as string) || 'demo_token';
 
-  const [declineOpen, setDeclineOpen] = useState(false);
-  const [reasonPreset, setReasonPreset] = useState('Incorrect details');
-  const [reasonText, setReasonText] = useState('');
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
-  // Sample signer session data
-  const isRahim = token.includes('rahim');
-  const signerName = isRahim ? 'Rahim Chowdhury' : 'Karimul Islam';
-  const signerEmail = isRahim ? 'rahim@horizon-logistics.bd' : 'karim@apex-commerce.bd';
-  const senderName = 'Tanvir Ahmed (Apex Commerce BD)';
-  const documentTitle = 'Mutual Non-Disclosure Agreement — Horizon Logistics';
-  const expiresDate = '24 Nov 2026';
+  const signerName = 'Tanvir Ahmed';
+  const signerRole = 'Managing Director, Meghna Distribution Corp.';
+  const signerEmail = 't.ahmed@meghnadist.com';
+  const senderName = 'Ayesha Rahman (Rahim Textiles & Trade Ltd.)';
+  const documentTitle = 'Rahim Traders — Commercial Supply Agreement';
+  const envelopeId = 'BD-2024-8849-ICT';
+  const expiresDate = '28 Oct 2024, 23:59 BST (4 days remaining)';
 
   const handleDecline = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,154 +42,173 @@ export default function SignLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-6 lg:p-8">
-      {/* Top Trust Header */}
+    <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+      {/* Top Header */}
       <div className="max-w-4xl mx-auto w-full flex items-center justify-between border-b border-border pb-4">
+        <Link href="/" className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
+          <WaxSeal size={28} />
+          <span>SignDesk</span>
+        </Link>
+
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-seal-600 flex items-center justify-center text-white text-xs font-bold">
-            •
-          </div>
-          <span className="font-body font-bold text-lg text-pine-900">SignDesk</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-pine-600 bg-pine-100 px-2.5 py-1 rounded-full border border-pine-500/20 font-semibold">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Secured Signer Portal</span>
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+            <span>ICT Act 2006 Validated</span>
+          </span>
+          <span className="text-xs font-mono text-ink-faint">Dhaka Sovereign Node</span>
         </div>
       </div>
 
-      {/* Main Landing Card */}
+      {/* Main Signer Chamber Intake Card */}
       <div className="max-w-2xl mx-auto w-full my-8">
-        <Card className="bg-surface border-border shadow-warm-md p-6 sm:p-8 space-y-6">
+        <div className="bg-surface rounded-2xl border-2 border-border shadow-warm p-6 sm:p-10 space-y-6">
           <div className="text-center space-y-3">
-            <WaxSeal size={64} className="mx-auto" />
-            <span className="text-xs font-mono uppercase tracking-widest text-ink-faint">
-              Electronic Signature Request
-            </span>
-            <h1 className="font-display text-3xl font-bold text-pine-900 leading-tight">
+            <div className="inline-flex justify-center">
+              <WaxSeal size={56} className="shadow-warm" />
+            </div>
+
+            <div className="text-xs font-mono uppercase tracking-widest text-brass-dark font-semibold">
+              Commercial Indenture & Electronic Execution Request
+            </div>
+
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-pine-900 leading-snug">
               {documentTitle}
             </h1>
-            <p className="text-sm text-ink-soft">
-              Sent by <strong>{senderName}</strong> for your review and execution.
+
+            <p className="text-xs text-ink-soft max-w-md mx-auto">
+              Initiated by <strong className="text-pine-900">{senderName}</strong> for formal commercial execution under Bangladesh e-Commerce law.
             </p>
           </div>
 
-          {/* Signer Identity Verification Block */}
-          <div className="p-4 bg-surface-raised rounded-[8px] border border-border space-y-2 text-xs">
-            <div className="flex items-center justify-between border-b border-border pb-2">
-              <span className="font-semibold text-pine-900 flex items-center gap-1.5">
-                <UserCheck className="w-4 h-4 text-pine-600" />
-                Signatory Identity
+          {/* Signer Identity Callout */}
+          <div className="p-4 rounded-xl bg-paper border border-border space-y-3 text-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-border">
+              <span className="text-[10px] font-mono uppercase text-ink-faint">Designated Signatory</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                NID 2FA READY
               </span>
-              <span className="text-[11px] font-mono text-ink-faint">No account required</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <div>
-                <span className="text-ink-faint block">Full Name:</span>
-                <strong className="text-pine-900">{signerName}</strong>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-pine-900 text-paper font-serif font-bold text-sm flex items-center justify-center">
+                TA
               </div>
               <div>
-                <span className="text-ink-faint block">Email Address:</span>
-                <strong className="text-pine-900 font-mono text-[11px]">{signerEmail}</strong>
+                <div className="font-bold text-pine-900 text-sm">{signerName}</div>
+                <div className="text-ink-soft text-[11px]">{signerRole}</div>
+                <div className="font-mono text-ink-faint text-[10px] mt-0.5">{signerEmail}</div>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border grid grid-cols-2 gap-2 text-[11px] font-mono text-ink-soft">
+              <div>
+                <span className="text-ink-faint">Envelope ID: </span>
+                <span className="text-pine-900 font-semibold">{envelopeId}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-ink-faint">Validity: </span>
+                <span className="text-amber-800">{expiresDate}</span>
               </div>
             </div>
           </div>
 
-          {/* Document Properties */}
-          <div className="grid grid-cols-2 gap-4 text-xs text-ink-soft pt-1">
-            <div className="p-3 bg-paper rounded border border-border space-y-1">
-              <span className="text-ink-faint block">Execution Validity:</span>
-              <strong className="text-pine-900 flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-pine-600" />
-                Until {expiresDate}
-              </strong>
+          {/* Statutory Comfort Box */}
+          <div className="p-4 rounded-xl bg-pine-50/60 border border-pine-200/80 text-xs text-pine-900 space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold">
+              <Scale className="w-4 h-4 text-pine-800" />
+              <span>Section 7, ICT Act 2006 Statutory Assurance</span>
             </div>
-            <div className="p-3 bg-paper rounded border border-border space-y-1">
-              <span className="text-ink-faint block">Legal Governance:</span>
-              <strong className="text-pine-900 flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-pine-600" />
-                ICT Act 2006 (Sec. 7)
-              </strong>
-            </div>
+            <p className="text-[11px] text-pine-800 leading-relaxed">
+              Execution of this instrument generates an immutable SHA-256 Merkle chain compliant with Bangladesh Evidence Act 1872 admissibility requirements. No physical ink required.
+            </p>
           </div>
 
-          {/* Action CTAs */}
+          {/* Primary Action Buttons */}
           <div className="space-y-3 pt-2">
-            <Link href={`/sign/${token}/review`} className="w-full block">
-              <Button variant="sign" size="lg" className="w-full h-12 text-base font-bold">
-                Review & Sign Agreement
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+            <Link href={`/sign/${token}/review`} className="block">
+              <button className="w-full py-3 px-6 rounded-xl bg-vermilion hover:bg-vermilion-hover text-paper font-bold text-sm shadow-warm transition-all flex items-center justify-center gap-2">
+                <span>Review Document & AI Summary</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
             </Link>
 
-            <div className="text-center pt-1">
+            <div className="flex items-center justify-between text-xs pt-1">
               <button
-                type="button"
-                onClick={() => setDeclineOpen(true)}
-                className="text-xs text-ink-faint hover:text-danger underline transition-colors"
+                onClick={() => setShowDeclineModal(true)}
+                className="text-ink-faint hover:text-vermilion transition-colors"
               >
                 Decline to sign this agreement
               </button>
+
+              <Link
+                href={`/sign/${token}/sign`}
+                className="text-pine-800 font-semibold hover:underline flex items-center gap-1"
+              >
+                <span>Jump straight to Signing Canvas</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
-        </Card>
+        </div>
+      </div>
 
-        {/* Decline Modal Dialog */}
-        {declineOpen && (
-          <div className="fixed inset-0 z-50 bg-pine-950/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <Card className="w-full max-w-md bg-surface p-6 space-y-4">
-              <div className="flex items-center gap-2 text-danger font-bold text-lg border-b border-border pb-3">
-                <AlertOctagon className="w-5 h-5" />
-                Decline to Sign Agreement
+      {/* Footer */}
+      <div className="max-w-4xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
+        SignDesk Sovereign Bangladesh PKI Network • Regulated by Controller of Certifying Authorities (CCA)
+      </div>
+
+      {/* Decline Rejection Modal */}
+      {showDeclineModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-surface rounded-2xl border border-border max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-red-100 text-red-700">
+                <XCircle className="w-5 h-5" />
               </div>
-              <p className="text-xs text-ink-soft">
-                Declining will immediately notify the sender and cancel the agreement execution workflow.
-              </p>
+              <div>
+                <h3 className="font-serif font-bold text-base text-pine-900">
+                  Decline to Sign
+                </h3>
+                <p className="text-xs text-ink-soft">
+                  Provide formal reason for non-execution.
+                </p>
+              </div>
+            </div>
 
-              <form onSubmit={handleDecline} className="space-y-4">
-                <div className="space-y-1 text-xs">
-                  <label className="font-semibold text-ink">Reason for declining (required):</label>
-                  <select
-                    value={reasonPreset}
-                    onChange={(e) => setReasonPreset(e.target.value)}
-                    className="w-full p-2 border border-border rounded text-xs bg-surface"
-                  >
-                    <option value="Incorrect details">Incorrect commercial terms or details</option>
-                    <option value="Do not agree to terms">Do not agree to contract terms</option>
-                    <option value="Wrong person">I am not the intended signatory</option>
-                    <option value="Other">Other reason</option>
-                  </select>
-                </div>
+            <form onSubmit={handleDecline} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-medium text-ink mb-1">
+                  Rejection Grounds (Required)
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={declineReason}
+                  onChange={(e) => setDeclineReason(e.target.value)}
+                  placeholder="e.g. Terms require revision before bilateral execution..."
+                  className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-vermilion/20 focus:border-vermilion text-xs"
+                />
+              </div>
 
-                <div className="space-y-1 text-xs">
-                  <label className="font-semibold text-ink">Additional explanation:</label>
-                  <textarea
-                    required
-                    rows={3}
-                    placeholder="Provide details for the sender..."
-                    value={reasonText}
-                    onChange={(e) => setReasonText(e.target.value)}
-                    className="w-full p-2 border border-border rounded text-xs bg-surface"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                  <Button type="button" variant="outline" size="sm" onClick={() => setDeclineOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button type="submit" variant="destructive" size="sm">
-                    Confirm Decline
-                  </Button>
-                </div>
-              </form>
-            </Card>
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDeclineModal(false)}
+                  className="px-3.5 py-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 rounded-lg bg-vermilion hover:bg-vermilion-hover text-paper text-xs font-bold shadow-sm"
+                >
+                  Submit Declination
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </div>
-
-      {/* Footer Notice */}
-      <div className="max-w-4xl mx-auto w-full text-center text-xs text-ink-faint border-t border-border pt-4">
-        Protected by 256-bit SHA Merkle integrity chaining. Compliant with Bangladesh ICT Act 2006.
-      </div>
+        </div>
+      )}
     </div>
   );
 }

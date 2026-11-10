@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   CheckCircle2,
@@ -17,18 +15,25 @@ import {
   ExternalLink,
   ArrowRight,
   Lock,
+  Scale,
+  Award,
+  Clock,
+  Send,
+  Building2,
+  Fingerprint,
 } from 'lucide-react';
 
 export default function SignDonePage() {
   const params = useParams();
-  const token = params.token as string;
+  const token = (params.token as string) || 'demo_token';
 
-  const isRahim = token.includes('rahim');
-  const signerName = isRahim ? 'Rahim Chowdhury' : 'Karimul Islam';
-  const signerEmail = isRahim ? 'rahim@horizon-logistics.bd' : 'karim@apex-commerce.bd';
-  const roleName = isRahim ? 'Receiving Party Signatory' : 'Disclosing Party Signatory';
-  const documentTitle = 'Mutual Non-Disclosure Agreement — Horizon Logistics';
-  const sha256Digest = '7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069';
+  const signerName = 'Tanvir Ahmed';
+  const signerEmail = 'tanvir@meghnadist.com';
+  const signerRole = 'Managing Director, Meghna Distribution Corp.';
+  const documentTitle = 'Rahim Traders — Commercial Supply Agreement';
+  const contractRef = '#RT-2024-884A';
+  const envelopeId = 'BD-2024-MEGHNA-8849';
+  const sha256Digest = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
   const [copied, setCopied] = useState(false);
 
@@ -38,122 +43,237 @@ export default function SignDonePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownload = () => {
+    window.print();
+  };
+
   return (
-    <div className="min-h-screen bg-paper flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-paper text-ink font-sans pb-24">
       {/* Top Header */}
-      <div className="max-w-3xl mx-auto w-full flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-seal-600 flex items-center justify-center text-white text-xs font-bold">
-            •
+      <div className="border-b border-border bg-surface px-6 py-4">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
+              <WaxSeal size={28} />
+              <span>SignDesk</span>
+            </Link>
+            <span className="text-ink-faint">|</span>
+            <div className="text-xs text-ink-soft">
+              <span className="font-semibold text-pine-900">{documentTitle}</span>
+              <span className="font-mono text-[11px] text-ink-faint ml-2">{contractRef}</span>
+            </div>
           </div>
-          <span className="font-body font-bold text-lg text-pine-900">SignDesk</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-pine-600 bg-pine-100 px-2.5 py-1 rounded-full border border-pine-500/20 font-semibold">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Execution Verified</span>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              <span>ICT Act 2006 §7 Validated</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Main Done Card */}
-      <div className="max-w-2xl mx-auto w-full my-8">
-        <Card className="bg-surface border-border shadow-warm-md p-6 sm:p-10 space-y-8 text-center">
-          <div className="space-y-4">
-            <WaxSeal size={80} className="mx-auto animate-pulse" />
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-pine-800 bg-pine-100 px-3 py-1 rounded-full border border-pine-500/20">
-              <CheckCircle2 className="w-4 h-4 text-pine-700" />
-              Signed & Sealed
-            </span>
-            <h1 className="font-display text-3xl sm:text-4xl font-bold text-pine-900 leading-tight">
-              Agreement Executed
-            </h1>
-            <p className="text-sm text-ink-soft max-w-lg mx-auto">
-              Your signature has been cryptographically recorded and chained under the legal framework of the <strong>Bangladesh Information and Communication Technology (ICT) Act 2006</strong>.
-            </p>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 space-y-6">
+        {/* Hero Celebration Card */}
+        <div className="bg-surface rounded-2xl border-2 border-brass/40 shadow-warm p-8 sm:p-10 text-center space-y-4">
+          <div className="inline-flex justify-center">
+            <WaxSeal size={72} className="shadow-warm animate-pulse" />
           </div>
 
-          {/* Execution Details Block */}
-          <div className="bg-surface-raised border border-border rounded-[8px] p-5 text-left space-y-3 text-xs">
-            <div className="border-b border-border pb-2 flex items-center justify-between">
-              <span className="font-semibold text-pine-900 flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-pine-600" />
-                {documentTitle}
+          <div className="text-xs font-mono uppercase tracking-widest text-brass-dark font-bold">
+            Bilateral Assent Concluded • Permanent Record
+          </div>
+
+          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-pine-900 tracking-tight">
+            Agreement Irrevocably Executed & Sealed
+          </h1>
+
+          <p className="text-xs sm:text-sm text-ink-soft max-w-xl mx-auto leading-relaxed">
+            The Commercial Supply & Bilateral Logistics Agreement between <strong>Rahim Textiles & Trade Ltd.</strong> and <strong>Meghna Distribution Corp.</strong> has been successfully signed by <strong>{signerName}</strong> ({signerRole}).
+          </p>
+
+          {/* Signatory Attestation Card */}
+          <div className="p-4 sm:p-5 rounded-xl bg-paper border border-border text-left space-y-3 mt-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-pine-900 text-paper font-serif font-bold text-sm flex items-center justify-center">
+                  TA
+                </div>
+                <div>
+                  <div className="font-bold text-pine-900 text-sm flex items-center gap-1.5">
+                    <span>{signerName}</span>
+                    <span className="text-[10px] font-mono text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded">
+                      VERIFIED
+                    </span>
+                  </div>
+                  <div className="text-xs text-ink-soft">{signerEmail}</div>
+                </div>
+              </div>
+
+              <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-pine-100 text-pine-900 border border-pine-300">
+                PKI-ECDSA ATTESTED
               </span>
-              <span className="text-[11px] font-mono text-ink-faint">Executed</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono text-ink-soft">
               <div>
-                <span className="text-ink-faint block">Signatory:</span>
-                <strong className="text-pine-900 text-sm">{signerName}</strong>
-                <span className="text-[11px] font-mono text-ink-soft block">{signerEmail}</span>
+                <span className="text-ink-faint">NID Identity: </span>
+                <span className="text-pine-900 font-medium">••••••••9120 (EC Verified)</span>
               </div>
               <div>
-                <span className="text-ink-faint block">Signing Capacity / Role:</span>
-                <strong className="text-pine-900 text-sm">{roleName}</strong>
-                <span className="text-[11px] text-ink-soft block">Dhaka, Bangladesh</span>
+                <span className="text-ink-faint">IP Geostamp: </span>
+                <span className="text-pine-900 font-medium">103.114.98.24 (Chittagong)</span>
+              </div>
+              <div>
+                <span className="text-ink-faint">Authentication: </span>
+                <span className="text-pine-900 font-medium">2FA OTP + Biometric Hash</span>
+              </div>
+              <div>
+                <span className="text-ink-faint">Execution Time: </span>
+                <span className="text-pine-900 font-medium">24 Oct 2024, 11:28:44 BST</span>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-ink-faint font-mono text-[11px]">SHA-256 Audit Digest Fingerprint:</span>
+        {/* Cryptographic Integrity Log */}
+        <div className="bg-surface rounded-xl border border-border p-6 shadow-subtle space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Lock className="w-4 h-4 text-pine-900" />
+              <h3 className="font-serif font-bold text-sm text-pine-900">
+                Statutory & Cryptographic Integrity Log
+              </h3>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              IMMUTABLE LEDGER
+            </span>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-ink-faint">
+                  Document SHA-256 Digest (Final Merkle Leaf)
+                </span>
                 <button
                   onClick={handleCopyHash}
-                  className="flex items-center gap-1 text-[11px] text-pine-700 hover:text-pine-900 font-semibold"
+                  className="text-[11px] font-mono text-pine-900 font-semibold hover:underline flex items-center gap-1"
                 >
-                  {copied ? <Check className="w-3 h-3 text-pine-700" /> : <Copy className="w-3 h-3" />}
-                  {copied ? 'Copied' : 'Copy'}
+                  {copied ? (
+                    <>
+                      <Check className="w-3 h-3 text-emerald-700" />
+                      <span>Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3 h-3" />
+                      <span>Copy Hash</span>
+                    </>
+                  )}
                 </button>
               </div>
-              <div className="font-mono text-[11px] bg-paper p-2.5 rounded border border-border break-all text-ink select-all">
+              <div className="font-mono text-xs text-pine-900 break-all font-medium">
                 {sha256Digest}
               </div>
             </div>
-          </div>
 
-          {/* Download & Security Notice */}
-          <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                variant="primary"
-                size="lg"
-                className="w-full text-xs font-bold"
-                onClick={() => alert('Downloading executed PDF with embedded signatures and cryptographic digest...')}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Executed PDF
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="w-full text-xs font-bold"
-                onClick={() => alert('Downloading Certificate of Completion (CoC) audit trail PDF...')}
-              >
-                <ShieldCheck className="w-4 h-4 mr-2" />
-                Certificate of Completion
-              </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px] font-mono text-ink-soft">
+              <div>
+                Certificate Ref: <strong className="text-pine-900">BD-CERT-2024-8849X</strong>
+              </div>
+              <div>
+                Security: <strong className="text-pine-900">FIPS 140-2 Level 3 HSM</strong>
+              </div>
             </div>
 
-            <div className="p-3 bg-paper rounded border border-border flex items-center justify-center gap-2 text-xs text-ink-soft">
-              <Mail className="w-4 h-4 text-pine-600" />
-              <span>A certified copy with audit certificate has been dispatched to <strong>{signerEmail}</strong>.</span>
+            <div className="p-3.5 rounded-lg bg-pine-50/60 border border-pine-200/80 text-[11px] text-pine-900 leading-relaxed flex items-start gap-2.5">
+              <Scale className="w-4 h-4 text-pine-800 shrink-0 mt-0.5" />
+              <span>
+                <strong>Admissibility Statement:</strong> Admissible as primary electronic evidence under Section 7 of the Bangladesh ICT Act 2006. Valid in any Court of Law or Admiralty Jurisdiction in Bangladesh.
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-ink-faint">
-            <Link href={`/security`} className="hover:text-pine-900 underline flex items-center gap-1">
-              Verify cryptographic Merkle hash <ExternalLink className="w-3 h-3" />
-            </Link>
-            <Link href="/" className="hover:text-pine-900 underline">
-              Return to SignDesk Home
-            </Link>
+        {/* Primary Action Buttons */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={handleDownload}
+            className="py-3 px-4 rounded-xl bg-pine-900 hover:bg-pine-800 text-paper text-xs font-semibold shadow-warm transition-all flex items-center justify-center gap-2"
+          >
+            <Download className="w-4 h-4 text-brass" />
+            <span>Download Sealed PDF & Certificate</span>
+          </button>
+
+          <Link href={`/documents/8849-ICT/audit`}>
+            <button className="w-full py-3 px-4 rounded-xl border border-border bg-surface hover:bg-paper text-ink text-xs font-semibold shadow-subtle transition-all flex items-center justify-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-pine-900" />
+              <span>View Forensic Audit Trail</span>
+            </button>
+          </Link>
+        </div>
+
+        {/* Automated Post-Execution Workflow Steps (3 of 3 Active) */}
+        <div className="bg-surface rounded-xl border border-border p-5 shadow-subtle space-y-3">
+          <div className="font-serif font-bold text-xs text-pine-900 pb-2 border-b border-border">
+            Automated Post-Execution Workflow Steps (3 of 3 Active)
           </div>
-        </Card>
-      </div>
 
-      {/* Footer */}
-      <div className="max-w-3xl mx-auto w-full text-center text-xs text-ink-faint border-t border-border pt-4">
-        SignDesk • Legally binding under Bangladesh Information and Communication Technology (ICT) Act 2006.
+          <div className="space-y-2.5 text-xs">
+            <div className="flex items-start gap-3 p-2.5 rounded-lg bg-paper border border-border">
+              <div className="w-5 h-5 rounded-full bg-emerald-700 text-paper text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-3 h-3" />
+              </div>
+              <div>
+                <div className="font-semibold text-pine-900">
+                  Step 01: Cryptographic PDF Dispatched
+                </div>
+                <div className="text-[11px] text-ink-soft">
+                  Sealed PDF with embedded PKI signature delivered to all signatories Ayesha Rahman, Tanvir Ahmed, and CC observer Advocate Kamal Uddin via SMTP-TLS.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-2.5 rounded-lg bg-paper border border-border">
+              <div className="w-5 h-5 rounded-full bg-emerald-700 text-paper text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-3 h-3" />
+              </div>
+              <div>
+                <div className="font-semibold text-pine-900">
+                  Step 02: Certificate of Completion
+                </div>
+                <div className="text-[11px] text-ink-soft">
+                  Tamper-evident ledger detailing IP geostamps, telecom cell records, and NID verification hashes permanently archived with digital thumbprints.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-2.5 rounded-lg bg-paper border border-border">
+              <div className="w-5 h-5 rounded-full bg-emerald-700 text-paper text-xs flex items-center justify-center shrink-0 mt-0.5">
+                <Check className="w-3 h-3" />
+              </div>
+              <div>
+                <div className="font-semibold text-pine-900">
+                  Step 03: Statutory 10-Year Safe Harbor
+                </div>
+                <div className="text-[11px] text-ink-soft">
+                  Deed deposited into SignDesk&apos;s HSM-encrypted legal vault compliant with Bangladesh Sub-Registry and NBR corporate filing guidelines (Retention Lock: Oct 2034).
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Return Navigation */}
+        <div className="text-center pt-2">
+          <Link
+            href="/dashboard"
+            className="text-xs text-pine-900 font-semibold hover:underline"
+          >
+            Return to Workspace Dashboard
+          </Link>
+        </div>
       </div>
     </div>
   );
