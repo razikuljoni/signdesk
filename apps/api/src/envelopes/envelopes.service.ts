@@ -5,12 +5,16 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import * as crypto from 'crypto';
 import { EnvelopeStatus, FieldType, RecipientRole } from '@signdesk/shared';
 
 @Injectable()
 export class EnvelopesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
 
   async createDraft(
     userId: string,
@@ -38,7 +42,6 @@ export class EnvelopesService {
         },
       });
 
-      // Log initial genesis audit event
       const eventHash = crypto
         .createHash('sha256')
         .update(envelope.originalHash + ':created')
@@ -95,6 +98,7 @@ export class EnvelopesService {
     const envelope = await this.prisma.envelope.findFirst({
       where: { id, workspaceId, deletedAt: null },
       include: {
+        owner: { select: { id: true, name: true, email: true } },
         recipients: {
           orderBy: { order: 'asc' },
         },
@@ -155,7 +159,6 @@ export class EnvelopesService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      // Delete previous recipients and recreate for draft
       await tx.field.updateMany({
         where: { envelopeId },
         data: { recipientId: null },
@@ -253,7 +256,6 @@ export class EnvelopesService {
         },
       });
 
-      // Clone recipients
       const recipientMap = new Map<string, string>();
       for (const r of source.recipients) {
         const newR = await tx.recipient.create({
@@ -269,7 +271,6 @@ export class EnvelopesService {
         recipientMap.set(r.id, newR.id);
       }
 
-      // Clone fields with mapped recipients
       for (const f of source.fields) {
         await tx.field.create({
           data: {
@@ -302,6 +303,228 @@ export class EnvelopesService {
     return this.prisma.envelope.update({
       where: { id },
       data: { deletedAt: new Date() },
+    });
+  }
+
+  async sendEnvelope(
+    id: string,
+    workspaceId: string,
+    userId: string,
+    options?: { messageToSigners?: string; expiresDays?: number },
+  ) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status !== 'DRAFT') {
+      throw new BadRequestException('Only draft envelopes can be sent');
+    }
+
+    if (!envelope.recipients || envelope.recipients.length === 0) {
+      throw new BadRequestException('At least one recipient is required before sending');
+    }
+
+    const unassigned = envelope.fields.filter((f) => !f.recipientId);
+    if (unassigned.length > 0) {
+      throw new BadRequestException(
+        `Cannot send: ${unassigned.length} required field(s) have not been assigned to any recipient`,
+      );
+    }
+
+    const expiryDays = options?.expiresDays || 14;
+    const expiresAt = new Date(Date.now() + expiryDays * 24 * 60 * 60 * 1000);
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+
+    return this.prisma.$transaction(async (tx) => {
+      const tokensMap = new Map<string, string>();
+      const recipients = await tx.recipient.findMany({
+        where: { envelopeId: id },
+        orderBy: { order: 'asc' },
+      });
+
+      for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+        tokensMap.set(r.id, rawToken);
+
+        const isFirstSigner = i === 0;
+        await tx.recipient.update({
+          where: { id: r.id },
+          data: {
+            tokenHash,
+            tokenExpiresAt: expiresAt,
+            status: isFirstSigner ? 'NOTIFIED' : 'PENDING',
+          },
+        });
+      }
+
+      const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+      const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+      const eventHash = crypto
+        .createHash('sha256')
+        .update(prevHash + ':sent:' + new Date().toISOString())
+        .digest('hex');
+
+      const updatedEnvelope = await tx.envelope.update({
+        where: { id },
+        data: {
+          status: 'WAITING',
+          sentAt: new Date(),
+          expiresAt,
+          messageToSigners: options?.messageToSigners || envelope.messageToSigners,
+        },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          envelopeId: id,
+          actor: 'Sender',
+          action: 'sent',
+          documentHash: envelope.originalHash,
+          prevHash,
+          eventHash,
+        },
+      });
+
+      const firstSigner = recipients[0];
+      const firstRawToken = tokensMap.get(firstSigner.id);
+      const magicLink = `${appUrl}/sign/${firstRawToken}`;
+
+      await this.mailService.sendSigningInvitation({
+        to: firstSigner.email,
+        recipientName: firstSigner.name,
+        senderName: envelope.owner?.name || 'Document Sender',
+        documentTitle: envelope.title,
+        magicLink,
+        expiresAt,
+      });
+
+      return {
+        ...updatedEnvelope,
+        magicLinks: recipients.map((r) => ({
+          recipientId: r.id,
+          name: r.name,
+          email: r.email,
+          order: r.order,
+          status: r.order === 1 ? 'NOTIFIED' : 'PENDING',
+          token: tokensMap.get(r.id),
+          magicLink: `${appUrl}/sign/${tokensMap.get(r.id)}`,
+        })),
+      };
+    });
+  }
+
+  async voidEnvelope(id: string, workspaceId: string, reason?: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status === 'COMPLETED') {
+      throw new BadRequestException('Completed envelopes are immutable and cannot be voided');
+    }
+    if (envelope.status === 'VOIDED') {
+      return envelope;
+    }
+
+    const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+    const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+    const eventHash = crypto
+      .createHash('sha256')
+      .update(prevHash + ':voided:' + (reason || 'No reason provided'))
+      .digest('hex');
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.envelope.update({
+        where: { id },
+        data: { status: 'VOIDED' },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          envelopeId: id,
+          actor: 'Sender',
+          action: 'voided',
+          previousValue: reason,
+          documentHash: envelope.originalHash,
+          prevHash,
+          eventHash,
+        },
+      });
+
+      return updated;
+    });
+  }
+
+  async remindRecipient(id: string, recipientId: string, workspaceId: string) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    if (envelope.status !== 'WAITING' && envelope.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('Can only remind signers on active envelopes');
+    }
+
+    const recipient = envelope.recipients.find((r) => r.id === recipientId);
+    if (!recipient) {
+      throw new NotFoundException('Recipient not found');
+    }
+    if (recipient.status === 'SIGNED') {
+      throw new BadRequestException('Cannot remind a recipient who has already signed');
+    }
+
+    const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+    const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+    const eventHash = crypto
+      .createHash('sha256')
+      .update(prevHash + ':reminded:' + recipient.email)
+      .digest('hex');
+
+    await this.prisma.auditEvent.create({
+      data: {
+        envelopeId: id,
+        actor: 'Sender',
+        action: 'reminded',
+        documentHash: envelope.originalHash,
+        prevHash,
+        eventHash,
+      },
+    });
+
+    return {
+      success: true,
+      reminded: recipient.email,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  async extendExpiry(id: string, workspaceId: string, extraDays = 7) {
+    const envelope = await this.getEnvelope(id, workspaceId);
+    const newExpiresAt = new Date(
+      (envelope.expiresAt ? new Date(envelope.expiresAt).getTime() : Date.now()) +
+        extraDays * 24 * 60 * 60 * 1000,
+    );
+
+    const lastAudit = envelope.auditEvents[envelope.auditEvents.length - 1];
+    const prevHash = lastAudit ? lastAudit.eventHash : envelope.originalHash;
+    const eventHash = crypto
+      .createHash('sha256')
+      .update(prevHash + ':extended:' + newExpiresAt.toISOString())
+      .digest('hex');
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.envelope.update({
+        where: { id },
+        data: {
+          expiresAt: newExpiresAt,
+          status: envelope.status === 'EXPIRED' ? 'WAITING' : envelope.status,
+        },
+      });
+
+      await tx.auditEvent.create({
+        data: {
+          envelopeId: id,
+          actor: 'Sender',
+          action: 'extended',
+          newValue: newExpiresAt.toISOString(),
+          documentHash: envelope.originalHash,
+          prevHash,
+          eventHash,
+        },
+      });
+
+      return updated;
     });
   }
 }

@@ -109,6 +109,46 @@ export class EnvelopesController {
     return this.envelopesService.setFields(id, req.user.workspaceId, body.fields);
   }
 
+  @Post(':id/send')
+  async sendEnvelope(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body()
+    body?: {
+      messageToSigners?: string;
+      expiresDays?: number;
+    },
+  ) {
+    return this.envelopesService.sendEnvelope(id, req.user.workspaceId, req.user.userId, body);
+  }
+
+  @Post(':id/remind/:recipientId')
+  async remindRecipient(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Param('recipientId') recipientId: string,
+  ) {
+    return this.envelopesService.remindRecipient(id, recipientId, req.user.workspaceId);
+  }
+
+  @Post(':id/extend')
+  async extendExpiry(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() body?: { extraDays?: number },
+  ) {
+    return this.envelopesService.extendExpiry(id, req.user.workspaceId, body?.extraDays);
+  }
+
+  @Post(':id/void')
+  async voidEnvelope(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body() body?: { reason?: string },
+  ) {
+    return this.envelopesService.voidEnvelope(id, req.user.workspaceId, body?.reason);
+  }
+
   @Post(':id/duplicate')
   async duplicateDraft(@Request() req: any, @Param('id') id: string) {
     return this.envelopesService.duplicateDraft(id, req.user.workspaceId, req.user.userId);

@@ -3,8 +3,12 @@ import { EnvelopesService } from './envelopes.service';
 describe('EnvelopesService', () => {
   let service: EnvelopesService;
   let mockPrisma: any;
+  let mockMail: any;
 
   beforeEach(() => {
+    mockMail = {
+      sendSigningInvitation: jest.fn().mockResolvedValue({ success: true }),
+    };
     mockPrisma = {
       $transaction: jest.fn(async (cb) => {
         return cb({
@@ -27,7 +31,7 @@ describe('EnvelopesService', () => {
       },
     };
 
-    service = new EnvelopesService(mockPrisma);
+    service = new EnvelopesService(mockPrisma, mockMail);
   });
 
   it('creates a draft with genesis audit event', async () => {
