@@ -13,3 +13,5 @@ coverage
 .DS_Store
 storage/uploads
 storage/completed
+.vercel
+.env*
