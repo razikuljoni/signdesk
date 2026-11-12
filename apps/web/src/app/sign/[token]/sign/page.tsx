@@ -439,7 +439,7 @@ export default function SignCanvasPage() {
                         <span>Tap to Sign & Affix Seal</span>
                       </div>
                       <span className="font-mono text-[10px] text-ink-faint font-normal">
-                        SHA-256 HSM Cryptographic Key Ready
+                        SHA-256 Cryptographic Hash Audit Ready
                       </span>
                     </button>
                   )}
@@ -670,7 +670,7 @@ export default function SignCanvasPage() {
 
             {/* Consent Footer Statement */}
             <div className="text-[11px] text-ink-faint leading-relaxed border-t border-border pt-3">
-              By clicking <strong>Adopt and Affix Seal</strong>, you consent that this signature is legally binding under Section 7 of the Bangladesh ICT Act 2006 and will be permanently linked to your verified email and IP 103.114.98.24.
+              By clicking <strong>Adopt and Affix Seal</strong>, you consent that this signature is legally binding under Section 7 of the Bangladesh ICT Act 2006 and will be permanently linked to your verified email and audit log.
             </div>
 
             {/* Modal Actions */}

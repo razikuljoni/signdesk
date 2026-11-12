@@ -420,10 +420,10 @@ export default function SignReviewPage() {
             />
             <div className="space-y-1">
               <div className="text-xs font-semibold text-pine-900 leading-snug">
-                I confirm assent to enter into this commercial agreement electronically under Section 7 of the Bangladesh Information and Communication Technology (ICT) Act 2006.
+                By checking this box and clicking &lsquo;Sign &amp; Finish&rsquo;, I agree to execute this document electronically pursuant to Section 7 of the Bangladesh Information and Communication Technology (ICT) Act 2006.
               </div>
               <p className="text-[11px] text-ink-soft leading-relaxed">
-                By ticking this box, you acknowledge that your electronic signature affixed herein has full legal equivalence to physical handwritten ink under Bangladesh law, and the resulting audit trail is admissible as primary evidence in all judicial courts and arbitration tribunals.
+                I acknowledge that my electronic signature possesses identical legal validity and enforceability as a handwritten signature under Bangladesh law.
               </p>
             </div>
           </label>
