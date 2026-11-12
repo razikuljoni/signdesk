@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Ban,
@@ -18,14 +19,22 @@ import {
 
 export default function SignVoidedPage() {
   const params = useParams();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
-  const revokingAuthority = 'Ayesha Rahman (Managing Director, Rahim Textiles & Trade Ltd.)';
-  const targetEnvelope = 'Rahim Traders — Commercial Supply Agreement (#ENV-BD-2024-8849-ICT)';
-  const formalReason =
-    'Terms superseded by updated commercial invoice and revised Incoterms 2020 delivery schedule';
-  const timestamp = '24 Oct 2024, 11:32:00 BST';
-  const senderEmail = 'ayesha.rahman@rahimtraders.com';
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    apiFetch(`/sign/${token}`)
+      .then((data) => setSession(data))
+      .catch((err) => console.warn('Could not load session on voided page:', err));
+  }, [token]);
+
+  const targetEnvelope = session?.envelopeTitle || 'Commercial Agreement';
+  const revokingAuthority = 'Document Sender';
+  const formalReason = 'Envelope has been voided by the originator.';
+  const timestamp = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }) + ' BST';
+  const senderEmail = session?.senderEmail || 'sender@signdesk.bd';
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between p-4 sm:p-6 lg:p-8">

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Clock,
@@ -16,11 +17,20 @@ import {
 
 export default function SignExpiredPage() {
   const params = useParams();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
   const [requested, setRequested] = useState(false);
-  const senderEmail = 'ayesha.rahman@rahimtraders.com';
-  const envelopeRef = 'Commercial Supply Agreement (#ENV-BD-2024-8849-ICT)';
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    apiFetch(`/sign/${token}`)
+      .then((data) => setSession(data))
+      .catch((err) => console.warn('Could not load session on expired page:', err));
+  }, [token]);
+
+  const senderEmail = session?.senderEmail || 'sender@organization.bd';
+  const envelopeRef = session?.envelopeTitle || 'Commercial Agreement';
 
   const handleRequestNew = () => {
     setRequested(true);

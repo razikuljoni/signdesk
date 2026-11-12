@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
 import { SettingsNav } from '@/components/settings/settings-nav';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Building2,
@@ -14,6 +15,7 @@ import {
   Scale,
   Receipt,
   FileCheck2,
+  AlertCircle
 } from 'lucide-react';
 
 export default function WorkspaceSettingsPage() {
@@ -25,16 +27,46 @@ export default function WorkspaceSettingsPage() {
 }
 
 function WorkspaceSettingsContent() {
-  const [entityName, setEntityName] = useState('Rahim Textiles & Trade Ltd.');
+  const [workspace, setWorkspace] = useState<any>(null);
+  const [entityName, setEntityName] = useState('');
   const [rjscNumber, setRjscNumber] = useState('C-84920/2014 (RJSC Dhaka Sadar)');
   const [etin, setEtin] = useState('8492048192-BD');
   const [binVat, setBinVat] = useState('002918401-0101');
   const [savedNotice, setSavedNotice] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function loadWorkspace() {
+      try {
+        const data = await apiFetch('/workspaces/current');
+        setWorkspace(data);
+        if (data.name) setEntityName(data.name);
+      } catch (err) {
+        console.warn('Could not load current workspace:', err);
+      }
+    }
+    loadWorkspace();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedNotice(true);
-    setTimeout(() => setSavedNotice(false), 2500);
+    if (!entityName.trim()) return;
+    setIsSaving(true);
+    setError(null);
+    try {
+      await apiFetch('/workspaces/current', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: entityName.trim() }),
+      });
+      setSavedNotice(true);
+      setTimeout(() => setSavedNotice(false), 2500);
+    } catch (err: any) {
+      console.error('Failed to update workspace:', err);
+      setError(err.message || 'Failed to update workspace');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

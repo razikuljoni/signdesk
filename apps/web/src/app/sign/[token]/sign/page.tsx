@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   PenTool,
@@ -24,20 +25,23 @@ import {
   Award,
   ChevronUp,
   ChevronDown,
+  AlertCircle
 } from 'lucide-react';
 
 export default function SignCanvasPage() {
   const params = useParams();
   const router = useRouter();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
-  const signerName = 'Tanvir Ahmed';
-  const signerRole = 'Managing Director, Meghna Distribution Corp.';
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'draw' | 'type' | 'upload'>('type');
-  const [typedName, setTypedName] = useState(signerName);
+  const [typedName, setTypedName] = useState('');
   const [adoptedSignature, setAdoptedSignature] = useState<string | null>(null);
   const [isSealed, setIsSealed] = useState(false);
   const [currentFieldStep, setCurrentFieldStep] = useState(2); // Step 2 of 3 fields
@@ -46,6 +50,51 @@ export default function SignCanvasPage() {
   // Drawing Canvas
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+
+    async function loadSession() {
+      try {
+        const data = await apiFetch(`/sign/${token}`);
+        if (data.status === 'voided') {
+          router.push(`/sign/${token}/voided`);
+          return;
+        }
+        if (data.status === 'declined') {
+          router.push(`/sign/${token}/declined`);
+          return;
+        }
+        if (data.status === 'already_signed') {
+          router.push(`/sign/${token}/already-signed`);
+          return;
+        }
+        if (data.status === 'expired') {
+          router.push(`/sign/${token}/expired`);
+          return;
+        }
+
+        setSession(data);
+        setTypedName(data.recipientName || 'Authorized Signatory');
+      } catch (err: any) {
+        console.error('Failed to load signing session:', err);
+        setError(err.message || 'Failed to initialize signing session');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadSession();
+  }, [token, router]);
+
+  const signerName = session?.recipientName || 'Authorized Signatory';
+  const signerRole = session?.recipientRole || 'Signatory';
+  const documentTitle = session?.envelopeTitle || 'Document Execution';
+  const envelopeId = session?.envelopeId || token.slice(0, 12);
+  const expiresDate = session?.expiresAt
+    ? new Date(session.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '14 days';
+  const senderName = session?.senderName || 'Document Sender';
 
   const startDrawing = (
     e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>
@@ -108,13 +157,62 @@ export default function SignCanvasPage() {
     setCurrentFieldStep(3);
   };
 
-  const handleFinishAndSeal = () => {
+  const handleFinishAndSeal = async () => {
     if (!isSealed) {
       setModalOpen(true);
       return;
     }
-    router.push(`/sign/${token}/done`);
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Build png base64 payload
+      let pngBase64 = adoptedSignature || '';
+      if (!pngBase64.startsWith('data:image/')) {
+        // Create an offscreen canvas to render typed signature to PNG data URL
+        const offscreen = document.createElement('canvas');
+        offscreen.width = 400;
+        offscreen.height = 100;
+        const ctx = offscreen.getContext('2d');
+        if (ctx) {
+          ctx.font = '32px serif';
+          ctx.fillStyle = '#0C2E29';
+          ctx.fillText(pngBase64 || signerName, 20, 60);
+          pngBase64 = offscreen.toDataURL('image/png');
+        } else {
+          pngBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+        }
+      }
+
+      await apiFetch(`/sign/${token}/sign`, {
+        method: 'POST',
+        body: JSON.stringify({
+          captureMode: activeTab === 'draw' ? 'DRAW' : activeTab === 'type' ? 'TYPE' : 'UPLOAD',
+          pngBase64,
+          fields: {},
+          disclosureVersion: 'v1.0',
+        }),
+      });
+
+      router.push(`/sign/${token}/done`);
+    } catch (err: any) {
+      console.error('Failed to submit signature:', err);
+      setError(err.message || 'Failed to submit signature. Please try again.');
+      setIsSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <WaxSeal size={48} className="animate-spin mx-auto" />
+          <p className="text-xs font-mono text-ink-soft">Preparing secure signing canvas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans pb-32">
@@ -132,8 +230,8 @@ export default function SignCanvasPage() {
 
             <div>
               <div className="text-xs font-semibold text-pine-900 flex items-center gap-2">
-                <span>Rahim Traders — Commercial Supply Agreement</span>
-                <span className="font-mono text-[10px] text-ink-faint">#BD-2024-8849-ICT</span>
+                <span>{documentTitle}</span>
+                <span className="font-mono text-[10px] text-ink-faint">#{envelopeId.slice(0, 10)}</span>
               </div>
               <div className="flex items-center gap-2 text-[10px] font-mono text-ink-faint mt-0.5">
                 <span className="text-emerald-800 font-semibold flex items-center gap-1">
@@ -143,10 +241,10 @@ export default function SignCanvasPage() {
                 <span>•</span>
                 <span className="text-amber-800 flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>Expires in 4 days</span>
+                  <span>Expires {expiresDate}</span>
                 </span>
                 <span>•</span>
-                <span>Parties: Rahim Textiles ↔ Meghna Dist.</span>
+                <span>Parties: {senderName} ↔ {signerName}</span>
               </div>
             </div>
           </div>
@@ -187,6 +285,13 @@ export default function SignCanvasPage() {
 
       {/* Main Parchment Document Container */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6">
+        {error && (
+          <div className="p-3 mb-4 rounded-xl bg-danger-bg text-danger border border-danger/30 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl border border-border shadow-warm p-8 sm:p-12 relative overflow-hidden">
           {/* Statutory Stamp Duty Header */}
           <div className="p-3 mb-8 bg-paper border border-brass/40 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono">
@@ -399,10 +504,11 @@ export default function SignCanvasPage() {
             ) : (
               <button
                 onClick={handleFinishAndSeal}
-                className="px-6 py-2.5 rounded-xl bg-vermilion hover:bg-vermilion-hover text-paper text-xs font-bold shadow-warm transition-all flex items-center gap-2 animate-bounce"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 rounded-xl bg-vermilion hover:bg-vermilion-hover text-paper text-xs font-bold shadow-warm transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 <ShieldCheck className="w-4 h-4" />
-                <span>Finish & Seal Document</span>
+                <span>{isSubmitting ? 'Sealing Document...' : 'Finish & Seal Document'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}

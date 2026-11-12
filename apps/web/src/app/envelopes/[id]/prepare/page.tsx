@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { apiFetch } from '@/lib/api';
 import {
   PenTool,
   Calendar,
@@ -105,118 +106,79 @@ function PrepareContent() {
   const [history, setHistory] = useState<FieldItem[][]>([]);
   const [sequentialOrder, setSequentialOrder] = useState(true);
 
-  // Default recipients matching Stitch spec
+  // Default recipient placeholder
   const [recipients, setRecipients] = useState<RecipientItem[]>([
     {
       id: 'rec_1',
-      name: 'Ayesha Rahman',
-      email: 'ayesha.rahman@rahimtraders.com',
+      name: 'Signer 1',
+      email: 'signer1@company.bd',
       role: 'SIGNER',
       order: 1,
       color: '#0C2E29', // Pine 900
       colorName: 'Pine (Signer 1)',
-    },
-    {
-      id: 'rec_2',
-      name: 'Tanvir Ahmed',
-      email: 'tanvir@meghnadist.com',
-      role: 'SIGNER',
-      order: 2,
-      color: '#B3402A', // Vermilion
-      colorName: 'Vermilion (Signer 2)',
-    },
-    {
-      id: 'rec_3',
-      name: 'Kamal Uddin, Advocate',
-      email: 'kamal.legal@dhkchambers.com',
-      role: 'VIEWER',
-      order: 3,
-      color: '#71717A',
-      colorName: 'Gray (Observer CC)',
     },
   ]);
 
   const [fields, setFields] = useState<FieldItem[]>([]);
 
   useEffect(() => {
-    const raw = localStorage.getItem(`signdesk_env_${envelopeId}`);
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        setEnvelope(parsed);
-        if (parsed.recipients?.length > 0) {
-          setRecipients(
-            parsed.recipients.map((r: any, idx: number) => ({
-              ...r,
-              color: idx === 0 ? '#0C2E29' : idx === 1 ? '#B3402A' : '#71717A',
-              colorName: idx === 0 ? 'Pine' : idx === 1 ? 'Vermilion' : 'Observer',
-            }))
-          );
+    let mounted = true;
+    apiFetch<any>(`/envelopes/${envelopeId}`)
+      .then((data) => {
+        if (!mounted) return;
+        setEnvelope(data);
+        if (data.recipients?.length > 0) {
+          const mapped = data.recipients.map((r: any, idx: number) => ({
+            id: r.id,
+            name: r.name,
+            email: r.email,
+            role: r.role || 'SIGNER',
+            order: r.order || idx + 1,
+            color: idx === 0 ? '#0C2E29' : idx === 1 ? '#B3402A' : '#71717A',
+            colorName: idx === 0 ? 'Pine' : idx === 1 ? 'Vermilion' : 'Observer',
+          }));
+          setRecipients(mapped);
+          setActiveRecipientId(mapped[0]?.id || 'rec_1');
         }
-        if (parsed.fields?.length > 0) {
-          setFields(parsed.fields);
+        if (data.fields?.length > 0) {
+          setFields(data.fields);
         } else {
-          // Pre-populate with starter fields matching Stitch
+          const rId = data.recipients?.[0]?.id || 'rec_1';
           const initialFields: FieldItem[] = [
             {
               id: 'fld_1',
               type: FieldType.SIGNATURE,
-              recipientId: 'rec_1',
+              recipientId: rId,
               page: 0,
               xRatio: 0.12,
               yRatio: 0.74,
               wRatio: 0.32,
               hRatio: 0.065,
               required: true,
-              label: 'Ayesha Rahman • Signature (PKI-RSA)',
+              label: 'Signature',
             },
             {
               id: 'fld_2',
               type: FieldType.DATE_SIGNED,
-              recipientId: 'rec_1',
+              recipientId: rId,
               page: 0,
               xRatio: 0.12,
               yRatio: 0.83,
               wRatio: 0.24,
               hRatio: 0.045,
               required: true,
-              label: 'Execution Date (Auto BST)',
-            },
-            {
-              id: 'fld_3',
-              type: FieldType.SIGNATURE,
-              recipientId: 'rec_2',
-              page: 0,
-              xRatio: 0.54,
-              yRatio: 0.74,
-              wRatio: 0.32,
-              hRatio: 0.065,
-              required: true,
-              label: 'Tanvir Ahmed • Signature (Step #2)',
-            },
-            {
-              id: 'fld_4',
-              type: FieldType.TEXT,
-              recipientId: 'rec_2',
-              page: 0,
-              xRatio: 0.54,
-              yRatio: 0.83,
-              wRatio: 0.28,
-              hRatio: 0.055,
-              required: true,
-              label: 'Company Seal Stamp (NBR Reg)',
+              label: 'Date Signed',
             },
           ];
           setFields(initialFields);
         }
-      } catch (e) {}
-    } else {
-      setEnvelope({
-        id: envelopeId,
-        title: 'Rahim Traders — Commercial Supply Agreement.pdf • v1.2',
-        pageCount: 3,
+      })
+      .catch((err) => {
+        console.error('Failed to load envelope', err);
       });
-    }
+    return () => {
+      mounted = false;
+    };
   }, [envelopeId]);
 
   const pushState = (newFields: FieldItem[]) => {
@@ -238,14 +200,22 @@ function PrepareContent() {
     const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setSavedTime(timeStr);
 
-    if (envelope) {
-      const updated = {
-        ...envelope,
-        fields: currentFields,
-        recipients,
-      };
-      localStorage.setItem(`signdesk_env_${envelopeId}`, JSON.stringify(updated));
-    }
+    apiFetch(`/envelopes/${envelopeId}/fields`, {
+      method: 'POST',
+      body: JSON.stringify({
+        fields: currentFields.map((f) => ({
+          recipientId: f.recipientId,
+          type: f.type,
+          page: f.page,
+          xRatio: f.xRatio,
+          yRatio: f.yRatio,
+          wRatio: f.wRatio,
+          hRatio: f.hRatio,
+          required: f.required,
+          label: f.label,
+        })),
+      }),
+    }).catch((e) => console.warn('Field autosave failed', e));
   };
 
   useEffect(() => {
@@ -673,14 +643,14 @@ function PrepareContent() {
               {/* Execution Sign-off Block */}
               <div className="pt-16 grid grid-cols-2 gap-8 text-[11px] border-t border-border">
                 <div className="space-y-1">
-                  <div className="font-bold text-pine-900">For First Party (Supplier):</div>
-                  <div className="text-ink-faint text-[10px]">Rahim Traders Ltd. • Dhaka EPZ</div>
-                  <div className="text-ink-soft text-[10px]">Ayesha Rahman, Managing Director</div>
+                  <div className="font-bold text-pine-900">For First Party:</div>
+                  <div className="text-ink-soft text-[10px] font-semibold">{recipients[0]?.name || 'Signatory 1'}</div>
+                  <div className="text-ink-faint text-[10px] font-mono">{recipients[0]?.email || ''}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="font-bold text-pine-900">For Second Party (Distributor):</div>
-                  <div className="text-ink-faint text-[10px]">Meghna Distribution Corp. • Agrabad</div>
-                  <div className="text-ink-soft text-[10px]">Tanvir Ahmed, Managing Director</div>
+                  <div className="font-bold text-pine-900">For Second Party:</div>
+                  <div className="text-ink-soft text-[10px] font-semibold">{recipients[1]?.name || recipients[0]?.name || 'Signatory 2'}</div>
+                  <div className="text-ink-faint text-[10px] font-mono">{recipients[1]?.email || ''}</div>
                 </div>
               </div>
             </div>

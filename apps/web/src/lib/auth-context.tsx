@@ -61,28 +61,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const res = await apiFetch<{
-        accessToken: string;
-        user: AuthUser;
-        workspace: AuthWorkspace;
-      }>('/auth/signin', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-      });
+    const res = await apiFetch<{
+      accessToken: string;
+      user: AuthUser;
+      workspace: AuthWorkspace;
+    }>('/auth/signin', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-      saveSession(res.accessToken, res.user, res.workspace);
-    } catch (err: any) {
-      // If server unreachable, check if demo user credentials
-      if (email === 'demo@signdesk.bd' && password === 'SignDesk2026!') {
-        const demoToken = 'mock_jwt_token_demo';
-        const demoUser: AuthUser = { id: 'usr-demo-1', name: 'Tanvir Ahmed', email: 'demo@signdesk.bd' };
-        const demoWorkspace: AuthWorkspace = { id: 'ws-demo-1', name: 'Apex Commerce BD', role: 'ADMIN' };
-        saveSession(demoToken, demoUser, demoWorkspace);
-        return;
-      }
-      throw err;
-    }
+    saveSession(res.accessToken, res.user, res.workspace);
   };
 
   const signInAsDemo = async () => {
@@ -90,24 +78,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (name: string, email: string, password: string, workspaceName: string) => {
-    try {
-      const res = await apiFetch<{
-        accessToken: string;
-        user: AuthUser;
-        workspace: AuthWorkspace;
-      }>('/auth/signup', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, password, workspaceName }),
-      });
+    const res = await apiFetch<{
+      accessToken: string;
+      user: AuthUser;
+      workspace: AuthWorkspace;
+    }>('/auth/signup', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, workspaceName }),
+    });
 
-      saveSession(res.accessToken, res.user, res.workspace);
-    } catch (err: any) {
-      // Fallback local session if offline
-      const mockToken = 'mock_jwt_' + Math.random().toString(36).substring(7);
-      const mockUser: AuthUser = { id: 'usr_' + Date.now(), name, email };
-      const mockWorkspace: AuthWorkspace = { id: 'ws_' + Date.now(), name: workspaceName, role: 'ADMIN' };
-      saveSession(mockToken, mockUser, mockWorkspace);
-    }
+    saveSession(res.accessToken, res.user, res.workspace);
   };
 
   const signOut = () => {

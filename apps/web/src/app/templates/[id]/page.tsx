@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth-guard';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   FileText,
@@ -37,17 +38,36 @@ export default function TemplateEditorPage() {
 function TemplateEditorContent() {
   const params = useParams();
   const router = useRouter();
-  const id = (params.id as string) || 'commercial-supply';
+  const id = (params.id as string) || '';
 
+  const [template, setTemplate] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeRole, setActiveRole] = useState<'signer1' | 'signer2' | 'witness'>('signer2');
   const [isRequired, setIsRequired] = useState(true);
   const [enforceNid2fa, setEnforceNid2fa] = useState(true);
   const [savedNotice, setSavedNotice] = useState(false);
 
+  useEffect(() => {
+    if (!id) return;
+    async function loadTemplate() {
+      try {
+        const data = await apiFetch(`/templates/${id}`);
+        setTemplate(data);
+      } catch (err) {
+        console.warn('Could not load template:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTemplate();
+  }, [id]);
+
   const handleSave = () => {
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 2500);
   };
+
+  const templateName = template?.name || 'Commercial Agreement Specimen';
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between">
@@ -66,14 +86,14 @@ function TemplateEditorContent() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-serif font-bold text-base text-pine-900">
-                  Commercial Supply Agreement (Specimen v2)
+                  {templateName}
                 </h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                   SPECIMEN DRAFT
                 </span>
               </div>
               <div className="text-[10px] font-mono text-ink-faint">
-                Draft Auto-saved 14:10 BST • Template ID: #TPL-BD-COMM-2024
+                Standard Template • ID: #{id.slice(0, 12)}
               </div>
             </div>
           </div>
