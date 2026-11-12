@@ -7,6 +7,7 @@ import {
   User,
   Building2,
   Users,
+  Bell,
   Key,
   Receipt,
   Shield,
@@ -30,7 +31,12 @@ const SETTINGS_LINKS = [
     icon: Users,
   },
   {
-    href: '/settings/developer',
+    href: '/settings/notifications',
+    label: 'Email & Notifications',
+    icon: Bell,
+  },
+  {
+    href: '/settings/developers',
     label: 'API Keys & Webhooks',
     icon: Key,
   },

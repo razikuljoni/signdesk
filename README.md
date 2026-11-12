@@ -88,7 +88,7 @@ SignDesk/
 │   │   │   ├── envelopes/
 │   │   │   │   ├── new/         # [Screen 5] PDF Ingestion & In-Memory Genesis Hash
 │   │   │   │   ├── [id]/prepare # [Screen 6] 3-Zone Field Placement Studio
-│   │   │   │   ├── prepare/recipients # [Screen 7] Recipient Config & Dispatch
+│   │   │   │   ├── [id]/recipients # [Screen 7] Recipient Config & Dispatch
 │   │   │   │   └── sent/        # [Screen 8] Envelope Sent Confirmation & Wax Seal
 │   │   │   ├── documents/
 │   │   │   │   ├── page.tsx     # [Screen 10] All Documents Table & Filters
@@ -112,7 +112,8 @@ SignDesk/
 │   │   │   │   ├── profile/     # [Screen 20] Profile & Legal Signatory Identity
 │   │   │   │   ├── workspace/   # [Screen 21] Workspace & Registered Entity Details
 │   │   │   │   ├── team/        # [Screen 22] Team Governance & Signatory Seats
-│   │   │   │   ├── developer/   # [Screen 23] Production API Keys & Webhooks
+│   │   │   │   ├── notifications/ # Email & Notification Lifecycle Preferences
+│   │   │   │   ├── developers/  # [Screen 23] Production API Keys & Webhooks
 │   │   │   │   ├── billing/     # [Screen 24A] Billing & Subscription Management
 │   │   │   │   └── security/    # [Screen 24B] Active Sessions & 10-Yr Safe Harbor
 │   │   │   ├── pricing/         # [Screen 25] Transparent Pricing (BDT & Local Gateways)
