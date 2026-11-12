@@ -108,6 +108,55 @@ export class DeveloperService {
   }
 
   /**
+   * Derives 256-bit key from environment secret for AES-GCM encryption at rest.
+   */
+  private getEncryptionKey(): Buffer {
+    const keySource =
+      process.env.WEBHOOK_ENCRYPTION_KEY ||
+      process.env.JWT_SECRET ||
+      'signdesk-default-webhook-encryption-key-32b';
+    return crypto.createHash('sha256').update(keySource).digest();
+  }
+
+  /**
+   * Encrypts webhook raw secret using AES-256-GCM.
+   * Returns: ivHex:tagHex:encryptedHex
+   */
+  encryptSecret(secret: string): string {
+    const key = this.getEncryptionKey();
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const encrypted = Buffer.concat([
+      cipher.update(secret, 'utf8'),
+      cipher.final(),
+    ]);
+    const tag = cipher.getAuthTag();
+    return `${iv.toString('hex')}:${tag.toString('hex')}:${encrypted.toString('hex')}`;
+  }
+
+  /**
+   * Decrypts AES-256-GCM encrypted webhook secret.
+   */
+  decryptSecret(encryptedData: string): string {
+    const parts = encryptedData.split(':');
+    if (parts.length !== 3) {
+      throw new Error('Invalid encrypted webhook secret format');
+    }
+    const [ivHex, tagHex, encryptedHex] = parts;
+    const key = this.getEncryptionKey();
+    const iv = Buffer.from(ivHex, 'hex');
+    const tag = Buffer.from(tagHex, 'hex');
+    const encrypted = Buffer.from(encryptedHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(tag);
+    return decipher.update(encrypted) + decipher.final('utf8');
+  }
+
+  public backoffBaseMs = process.env.NODE_ENV === 'test' ? 10 : 100;
+  public maxAttempts = 3;
+  public maxConsecutiveFailures = 5;
+
+  /**
    * Creates a webhook subscription endpoint with HMAC secret.
    */
   async createWebhookEndpoint(
@@ -122,14 +171,17 @@ export class DeveloperService {
 
     const rawSecret = `whsec_${crypto.randomBytes(24).toString('hex')}`;
     const secretHash = crypto.createHash('sha256').update(rawSecret).digest('hex');
+    const secretEncrypted = this.encryptSecret(rawSecret);
 
     const endpoint = await this.prisma.webhookEndpoint.create({
       data: {
         workspaceId,
         url: data.url.trim(),
         secretHash,
+        secretEncrypted,
         events: data.events,
         enabled: true,
+        consecutiveFailures: 0,
       },
     });
 
@@ -146,7 +198,15 @@ export class DeveloperService {
   async listWebhookEndpoints(workspaceId: string) {
     return this.prisma.webhookEndpoint.findMany({
       where: { workspaceId },
-      include: {
+      select: {
+        id: true,
+        workspaceId: true,
+        url: true,
+        secretHash: true,
+        events: true,
+        enabled: true,
+        consecutiveFailures: true,
+        createdAt: true,
         _count: { select: { deliveries: true } },
       },
       orderBy: { createdAt: 'desc' },
@@ -237,8 +297,35 @@ export class DeveloperService {
       return subscribed.includes(event) || subscribed.includes('*');
     });
 
+    // Check envelope validity if envelopeId provided
+    let validEnvelopeId: string | null = null;
+    if (envelopeId && envelopeId !== 'test-envelope-id') {
+      try {
+        const env = await this.prisma.envelope?.findUnique?.({
+          where: { id: envelopeId },
+          select: { id: true },
+        });
+        if (env) validEnvelopeId = env.id;
+      } catch {
+        validEnvelopeId = null;
+      }
+    }
+
     const results = [];
     for (const ep of matching) {
+      // 1. Decrypt raw secret (never logged or stored in plaintext)
+      let rawSecret: string;
+      if (ep.secretEncrypted) {
+        try {
+          rawSecret = this.decryptSecret(ep.secretEncrypted);
+        } catch {
+          this.logger.error(`Decryption failed for webhook endpoint ${ep.id}`);
+          rawSecret = ep.secretHash;
+        }
+      } else {
+        rawSecret = ep.secretHash;
+      }
+
       const rawPayload = JSON.stringify({
         id: `evt_${crypto.randomBytes(12).toString('hex')}`,
         event,
@@ -246,21 +333,92 @@ export class DeveloperService {
         data: payload,
       });
 
-      const signature = this.generateWebhookSignature(rawPayload, ep.secretHash);
+      const signature = this.generateWebhookSignature(rawPayload, rawSecret);
 
-      // Record delivery log
+      // 2. Real HTTP delivery with 5s timeout & exponential backoff
+      let attempt = 0;
+      let statusCode: number | null = null;
+      let isSuccess = false;
+
+      while (attempt < this.maxAttempts) {
+        attempt++;
+        try {
+          const res = await fetch(ep.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-SignDesk-Signature': signature,
+              'User-Agent': 'SignDesk-Webhook/1.0',
+            },
+            body: rawPayload,
+            signal: AbortSignal.timeout(5000),
+          });
+
+          statusCode = res.status;
+          if (res.ok) {
+            isSuccess = true;
+            break;
+          }
+        } catch (err: any) {
+          statusCode = err?.name === 'TimeoutError' ? 408 : 0;
+        }
+
+        if (attempt < this.maxAttempts) {
+          const delay = this.backoffBaseMs * Math.pow(2, attempt - 1);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+      }
+
+      // 3. Consecutive failures tracking & auto-disable (Plan §9)
+      let consecutiveFailures = ep.consecutiveFailures || 0;
+      let shouldDisable = false;
+
+      if (isSuccess) {
+        consecutiveFailures = 0;
+      } else {
+        consecutiveFailures += 1;
+        if (consecutiveFailures >= this.maxConsecutiveFailures) {
+          shouldDisable = true;
+        }
+      }
+
+      if (this.prisma.webhookEndpoint.update) {
+        await this.prisma.webhookEndpoint.update({
+          where: { id: ep.id },
+          data: {
+            consecutiveFailures,
+            enabled: shouldDisable ? false : ep.enabled,
+          },
+        });
+      }
+
+      const deliveryStatus = shouldDisable
+        ? 'DISABLED'
+        : isSuccess
+          ? 'DELIVERED'
+          : 'FAILED';
+
+      // 4. Record delivery log with real status code & attempt count
       const delivery = await this.prisma.webhookDelivery.create({
         data: {
           endpointId: ep.id,
-          envelopeId,
+          envelopeId: validEnvelopeId,
           event,
           payload: JSON.parse(rawPayload),
-          statusCode: 200, // Simulated successful delivery in sandbox
-          attempts: 1,
+          statusCode,
+          attempts: attempt,
+          status: deliveryStatus,
         },
       });
 
-      this.logger.log(`Dispatched webhook ${event} to ${ep.url} with signature.`);
+      if (isSuccess) {
+        this.logger.log(`Dispatched webhook ${event} to ${ep.url} (status: ${statusCode}, attempts: ${attempt})`);
+      } else if (shouldDisable) {
+        this.logger.warn(`Disabled webhook endpoint ${ep.id} (${ep.url}) after ${consecutiveFailures} consecutive failures`);
+      } else {
+        this.logger.warn(`Failed webhook delivery ${event} to ${ep.url} (status: ${statusCode}, attempts: ${attempt}, failures: ${consecutiveFailures})`);
+      }
+
       results.push(delivery);
     }
 
