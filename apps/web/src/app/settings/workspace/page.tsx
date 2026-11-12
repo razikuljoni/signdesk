@@ -152,7 +152,7 @@ function WorkspaceSettingsContent() {
 
               <div className="sm:col-span-2">
                 <label className="block text-ink font-medium mb-1">
-                  VAT Registration / BIN (Mushak-6.3 Compatible)
+                  VAT Registration / BIN
                 </label>
                 <input
                   type="text"

@@ -54,7 +54,7 @@ export default function PricingPage() {
             Transparent pricing for sovereign commerce.
           </h1>
           <p className="text-xs sm:text-sm text-ink-soft max-w-xl mx-auto leading-relaxed">
-            All plans billed natively in Bangladeshi Taka (BDT) with automated NBR-recognized Mushak-6.3 VAT invoices.
+            All plans billed in Bangladeshi Taka (BDT) with transparent commercial invoicing.
           </p>
 
           {/* Billing Frequency Toggle */}
@@ -115,7 +115,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-700 shrink-0" />
-                  <span>Standard email & WhatsApp signer delivery</span>
+                  <span>Secure email signer delivery</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-700 shrink-0" />
@@ -156,11 +156,10 @@ export default function PricingPage() {
 
               <div className="pt-2 border-t border-border">
                 <div className="font-serif text-3xl font-bold text-pine-900">
-                  {annual ? '৳1,249' : '৳1,499'}
-                  <span className="text-xs font-normal font-sans text-ink-soft"> / month</span>
+                  Pricing TBD
                 </div>
                 <div className="text-[11px] font-mono text-emerald-800 font-semibold">
-                  Billed in BDT with 5% VAT Mushak-6.3
+                  Billed in BDT
                 </div>
               </div>
 
@@ -175,7 +174,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-700 shrink-0" />
-                  <span>Porichoy National ID 2FA biometric verification</span>
+                  <span>Secure email two-factor authentication</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-700 shrink-0" />
@@ -187,7 +186,7 @@ export default function PricingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-700 shrink-0" />
-                  <span>Automated NBR Mushak-6.3 tax receipts</span>
+                  <span>Automated commercial VAT receipts</span>
                 </li>
               </ul>
             </div>
@@ -217,8 +216,7 @@ export default function PricingPage() {
 
               <div className="pt-2 border-t border-border">
                 <div className="font-serif text-3xl font-bold text-pine-900">
-                  {annual ? '৳3,299' : '৳3,999'}
-                  <span className="text-xs font-normal font-sans text-ink-soft"> / month</span>
+                  Pricing TBD
                 </div>
                 <div className="text-[11px] font-mono text-ink-faint">Custom volume tiers available</div>
               </div>
@@ -259,14 +257,11 @@ export default function PricingPage() {
         <div className="p-4 rounded-xl bg-surface border border-border shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 text-ink-soft">
             <CreditCard className="w-4 h-4 text-pine-900" />
-            <span className="font-semibold text-pine-900">Domestic BDT Settlement Channels:</span>
+            <span className="font-semibold text-pine-900">Settlement Channels:</span>
           </div>
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-ink-faint">
-            <span className="bg-paper px-2 py-0.5 rounded border border-border">bKash Merchant</span>
-            <span className="bg-paper px-2 py-0.5 rounded border border-border">Nagad Direct</span>
-            <span className="bg-paper px-2 py-0.5 rounded border border-border">Rocket</span>
-            <span className="bg-paper px-2 py-0.5 rounded border border-border">Local Visa / Mastercard</span>
-            <span className="bg-paper px-2 py-0.5 rounded border border-border">BEFTN / RTGS Corporate Bank Transfer</span>
+            <span className="bg-paper px-2 py-0.5 rounded border border-border">Corporate Bank Transfer (BEFTN / RTGS)</span>
+            <span className="bg-paper px-2 py-0.5 rounded border border-border">Corporate Invoicing</span>
           </div>
         </div>
 
@@ -288,10 +283,10 @@ export default function PricingPage() {
 
             <div className="space-y-1">
               <div className="font-bold text-pine-900">
-                How does the 5% VAT deduction work on invoices?
+                How does VAT billing work on invoices?
               </div>
               <p className="text-ink-soft leading-relaxed">
-                Under NBR guidelines for cloud software, SignDesk generates automated Mushak-6.3 tax challans for corporate accounts so your accounts department can claim VAT input credits.
+                SignDesk generates standard electronic invoices showing applicable VAT and BIN details for corporate accounts.
               </p>
             </div>
 

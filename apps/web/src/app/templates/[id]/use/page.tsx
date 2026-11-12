@@ -190,7 +190,7 @@ function UseTemplateContent() {
                   Role 1: Supplier / Originator (First Signer)
                 </span>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                  VERIFIED NID (#***-***-5521)
+                  VERIFIED SIGNATORY
                 </span>
               </div>
               <div className="font-bold text-sm text-pine-900">Ayesha Rahman</div>
@@ -232,7 +232,7 @@ function UseTemplateContent() {
                 </div>
 
                 <div>
-                  <label className="block text-ink font-medium mb-1">WhatsApp Mobile (OTP Delivery)</label>
+                  <label className="block text-ink font-medium mb-1">Signer Mobile Contact</label>
                   <input
                     type="text"
                     required
@@ -251,7 +251,7 @@ function UseTemplateContent() {
                       className="rounded text-pine-900 focus:ring-pine-900/30"
                     />
                     <span className="text-xs font-semibold text-pine-900">
-                      Mandate Porichoy NID 2FA Verification
+                      Require Email Token 2FA Verification
                     </span>
                   </label>
                 </div>

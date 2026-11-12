@@ -141,7 +141,7 @@ export default function LegalEnforceabilityPage() {
                 Cryptographic Identity Attribution
               </h3>
               <p className="text-ink-soft leading-relaxed">
-                Multi-channel 2FA linking single-use token nonces with WhatsApp delivery, corporate MX email records, IP geostamps, and optional National ID Porichoy API verification.
+                Multi-channel identity attribution linking single-use token nonces with secure email delivery, corporate MX records, IP geostamps, and audit trail timestamps.
               </p>
             </div>
 
@@ -211,7 +211,7 @@ export default function LegalEnforceabilityPage() {
                 Interactive Hash Verification Tool (FIPS 180-4)
               </h3>
             </div>
-            <span className="text-[11px] font-mono text-ink-faint">CCA Bangladesh Trust Chain</span>
+            <span className="text-[11px] font-mono text-ink-faint">SHA-256 Audit Trail</span>
           </div>
 
           <p className="text-xs text-ink-soft">
@@ -243,7 +243,7 @@ export default function LegalEnforceabilityPage() {
                 <span>SHA-256 Digest Confirmed Intact & Validated</span>
               </div>
               <div className="text-[11px] font-mono text-emerald-800">
-                Merkle Leaf matches CCA Bangladesh Root Registry • Zero Bit Collision Drift • Legally Binding Record
+                Merkle Leaf matches immutable document ledger • Zero Bit Collision Drift • Legally Binding Record
               </div>
             </div>
           )}

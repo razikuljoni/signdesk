@@ -110,7 +110,7 @@ export default function SignDeclinedPage() {
               Sender Notified & Next Steps
             </div>
             <p className="text-[11px] text-ink-soft leading-relaxed">
-              Ayesha Rahman has been immediately notified via corporate email and WhatsApp with your exact comments. A revised agreement reflecting the updated indemnity clause will be re-issued for bilateral execution.
+              Ayesha Rahman has been immediately notified via corporate email with your exact comments. A revised agreement reflecting the updated indemnity clause will be re-issued for bilateral execution.
             </p>
             <div className="pt-2 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] font-mono text-ink-soft">
               <div>Direct Contact: <strong className="text-pine-900">{senderContact.name}</strong></div>

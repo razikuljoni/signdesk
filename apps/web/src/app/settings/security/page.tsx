@@ -81,11 +81,11 @@ function SecuritySettingsContent() {
               Workspace Settings
             </h1>
             <p className="text-xs text-ink-soft mt-0.5">
-              Device sessions, FIPS HSM cryptographic root, and 10-year statutory safe harbor lock.
+              Device sessions, SHA-256 cryptographic audit trail, and 10-year statutory safe harbor lock.
             </p>
           </div>
           <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-            FIPS 140-2 LEVEL 3 LOCK
+            SHA-256 AUDIT LOCK
           </span>
         </div>
       </div>

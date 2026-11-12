@@ -110,7 +110,7 @@ export default function SignUpPage() {
               <div className="bg-paper rounded-xl p-4 border border-border/80 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-mono font-bold text-pine-950 uppercase tracking-wider text-[11px]">
-                    PKI Vault Enclave
+                    Cryptographic Audit Ledger
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-semibold">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
@@ -122,10 +122,10 @@ export default function SignUpPage() {
                     SHA-256
                   </span>
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-surface border border-border text-ink-soft">
-                    RSA-4096
+                    AES-256-GCM
                   </span>
                   <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-surface border border-border text-ink-soft">
-                    ECDSA Seal
+                    Digital Seal
                   </span>
                 </div>
               </div>
@@ -159,7 +159,7 @@ export default function SignUpPage() {
               <ul className="space-y-2.5 text-xs text-ink-soft">
                 <li className="flex items-center gap-2.5">
                   <Key className="w-4 h-4 text-pine-600 shrink-0" />
-                  <span>256-Bit HSM Hardware Token Signing</span>
+                  <span>256-Bit SHA Hash-Chain Verification</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Server className="w-4 h-4 text-pine-600 shrink-0" />
@@ -167,7 +167,7 @@ export default function SignUpPage() {
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Fingerprint className="w-4 h-4 text-pine-600 shrink-0" />
-                  <span>Porichoy / NID Instant API Verification Ready</span>
+                  <span>Corporate Email Identity Verification</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <Award className="w-4 h-4 text-pine-600 shrink-0" />
@@ -225,7 +225,7 @@ export default function SignUpPage() {
                       <label htmlFor="legalName" className="text-xs font-bold text-pine-900 uppercase tracking-wider">
                         Full Legal Name
                       </label>
-                      <span className="text-[10px] text-ink-faint font-mono">Matches NID</span>
+                      <span className="text-[10px] text-ink-faint font-mono">Signatory Name</span>
                     </div>
                     <div className="relative">
                       <User className="w-4 h-4 text-ink-faint absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -334,8 +334,8 @@ export default function SignUpPage() {
                     </button>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-ink-faint pt-1">
-                    <span>Compliant with PKI Vault Entropy Standards</span>
-                    <span className="font-mono text-[10px] text-pine-600 font-semibold">FIPS 140-2 Level 3 Ready</span>
+                    <span>Compliant with Secure Entropy Standards</span>
+                    <span className="font-mono text-[10px] text-pine-600 font-semibold">Argon2 Password Protection</span>
                   </div>
                 </div>
 
@@ -390,7 +390,7 @@ export default function SignUpPage() {
         <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-ink-faint font-mono">
           <div className="inline-flex items-center gap-2">
             <Lock className="w-3.5 h-3.5 text-pine-600" />
-            <span>Cryptographically Secured under Bangladesh ICT Act 2006 • 256-Bit PKI Vault Architecture</span>
+            <span>Cryptographically Secured under Bangladesh ICT Act 2006 • SHA-256 Audit Architecture</span>
           </div>
           <div>Dhaka Enclave • Timestamp: UTC+6 Bangladesh Standard Time • FIPS 186-4 Compliant</div>
         </div>

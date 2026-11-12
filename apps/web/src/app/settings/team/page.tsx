@@ -214,7 +214,7 @@ function TeamSettingsContent() {
                     className="rounded text-pine-900 focus:ring-pine-900/30"
                   />
                   <span className="text-xs font-medium text-pine-900">
-                    Mandate Bangladesh Porichoy National ID 2FA Verification
+                    Require Email 2FA Verification for Signatures
                   </span>
                 </label>
 

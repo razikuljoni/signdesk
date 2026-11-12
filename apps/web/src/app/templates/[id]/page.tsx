@@ -44,7 +44,7 @@ function TemplateEditorContent() {
   const [loading, setLoading] = useState(true);
   const [activeRole, setActiveRole] = useState<'signer1' | 'signer2' | 'witness'>('signer2');
   const [isRequired, setIsRequired] = useState(true);
-  const [enforceNid2fa, setEnforceNid2fa] = useState(true);
+  const [enforce2fa, setEnforce2fa] = useState(true);
   const [savedNotice, setSavedNotice] = useState(false);
 
   useEffect(() => {
@@ -222,7 +222,7 @@ function TemplateEditorContent() {
 
               <div className="p-2.5 rounded-lg bg-paper border border-border text-xs flex items-center gap-2 cursor-grab hover:border-pine-800 transition-colors">
                 <Fingerprint className="w-4 h-4 text-emerald-700" />
-                <span className="font-medium text-pine-900">NID / Porichoy 2FA Gate</span>
+                <span className="font-medium text-pine-900">Signer Email 2FA Gate</span>
               </div>
             </div>
           </div>
@@ -309,13 +309,13 @@ function TemplateEditorContent() {
 
               <label className="flex items-center justify-between p-2.5 rounded-lg bg-paper border border-border cursor-pointer">
                 <div>
-                  <div className="font-medium text-ink">Enforce Porichoy NID 2FA</div>
-                  <div className="text-[10px] text-ink-faint">Biometric challenge required</div>
+                  <div className="font-medium text-ink">Enforce Email 2FA</div>
+                  <div className="text-[10px] text-ink-faint">Security verification required</div>
                 </div>
                 <input
                   type="checkbox"
-                  checked={enforceNid2fa}
-                  onChange={(e) => setEnforceNid2fa(e.target.checked)}
+                  checked={enforce2fa}
+                  onChange={(e) => setEnforce2fa(e.target.checked)}
                   className="rounded text-pine-900 focus:ring-pine-900/30"
                 />
               </label>
@@ -334,7 +334,7 @@ function TemplateEditorContent() {
                 <span>Statutory Instruction</span>
               </div>
               <p className="italic text-ink-soft">
-                &ldquo;Signatory must complete biometric NID challenge prior to seal affixation.&rdquo;
+                &ldquo;Signatory must verify one-time access token prior to seal affixation.&rdquo;
               </p>
             </div>
 

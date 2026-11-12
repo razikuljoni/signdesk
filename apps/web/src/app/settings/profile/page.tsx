@@ -109,7 +109,7 @@ function ProfileSettingsContent() {
                 </p>
               </div>
               <span className="px-2.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                NID VERIFIED
+                IDENTITY VERIFIED
               </span>
             </div>
 
@@ -171,7 +171,7 @@ function ProfileSettingsContent() {
                     Saved Signature Specimen
                   </div>
                   <div className="text-[11px] text-ink-soft">
-                    Archival Caveat script specimen permanently bound to your PKI keypair.
+                    Archival signature specimen permanently recorded in your workspace.
                   </div>
                 </div>
                 <button
@@ -187,7 +187,7 @@ function ProfileSettingsContent() {
                   {fullName}
                 </div>
                 <div className="font-mono text-[10px] text-ink-faint">
-                  PKI Hash: 99a8b1e4c7d0d04c4ae79cbff91b29a00184762ec04 • Issued: Oct 2024
+                  Audit Hash: 99a8b1e4c7d0d04c4ae79cbff91b29a00184762ec04 • Issued: Oct 2024
                 </div>
               </div>
             </div>

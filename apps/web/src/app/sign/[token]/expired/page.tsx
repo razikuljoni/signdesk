@@ -101,7 +101,7 @@ export default function SignExpiredPage() {
             {requested ? (
               <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-semibold flex items-center justify-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                <span>Re-issuance request dispatched to {senderEmail} via WhatsApp & Email!</span>
+                <span>Re-issuance request dispatched to {senderEmail} via Email!</span>
               </div>
             ) : (
               <button

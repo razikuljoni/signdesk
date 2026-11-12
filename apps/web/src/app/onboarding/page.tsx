@@ -230,7 +230,7 @@ function OnboardingContent() {
               </div>
               <div>
                 <div className="font-semibold text-pine-900">Step 4: Invite Signatories</div>
-                <div className="text-[11px] text-ink-soft">Define sequential order & WhatsApp OTP</div>
+                <div className="text-[11px] text-ink-soft">Define sequential signing order & email delivery</div>
               </div>
             </div>
           </div>
@@ -328,7 +328,7 @@ function OnboardingContent() {
                   {executiveSignature}
                 </div>
                 <div className="text-[11px] font-mono text-emerald-800">
-                  ✓ Bound to Porichoy NID Verification
+                  ✓ Bound to Signer Verification
                 </div>
               </div>
             </div>

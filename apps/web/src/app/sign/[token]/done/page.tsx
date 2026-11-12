@@ -133,7 +133,7 @@ export default function SignDonePage() {
               </div>
 
               <span className="px-2.5 py-1 rounded text-[10px] font-mono font-bold bg-pine-100 text-pine-900 border border-pine-300">
-                PKI-ECDSA ATTESTED
+                CRYPTOGRAPHICALLY ATTESTED
               </span>
             </div>
 

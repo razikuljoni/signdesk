@@ -36,7 +36,7 @@ const SETTINGS_LINKS = [
   },
   {
     href: '/settings/billing',
-    label: 'Billing & Mushak-6.3',
+    label: 'Billing & Subscription',
     icon: Receipt,
   },
   {

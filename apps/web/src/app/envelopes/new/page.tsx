@@ -188,7 +188,7 @@ function NewEnvelopeContent() {
           Upload bilateral agreements, corporate indentures, or vendor work orders. Incoming documents are immediately normalized to archival ISO 19005-1 PDF/A-1b specifications with real-time SHA-256 integrity verification.
         </p>
         <div className="text-[11px] text-ink-faint font-mono pt-1">
-          Intake Ledger Node: PKI-BD-DHK-NODE-04 • Asia/Dhaka GMT+6
+          Intake Ledger Node: SEC-BD-DHK-NODE-04 • Asia/Dhaka GMT+6
         </div>
       </div>
 
@@ -381,7 +381,7 @@ function NewEnvelopeContent() {
                   <ClipboardList className="w-3.5 h-3.5 text-pine-600" />
                   <span>Standard Work Order</span>
                 </div>
-                <div className="text-[11px] text-ink-faint">2 Pages • Mushak 6.3</div>
+                <div className="text-[11px] text-ink-faint">2 Pages • Commercial Agreement</div>
               </button>
             </div>
           </div>
@@ -484,7 +484,7 @@ function NewEnvelopeContent() {
 
       {/* Statutory Footer Strip */}
       <div className="text-center text-[11px] text-ink-faint font-mono pt-2">
-        PKI Vault 256-Bit Cryptographic Sealing • Statutory Electronic Execution under Bangladesh ICT Act 2006
+        Tamper-Evident SHA-256 Audit Sealing • Statutory Electronic Execution under Bangladesh ICT Act 2006
       </div>
     </div>
   );

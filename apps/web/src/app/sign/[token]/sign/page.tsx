@@ -379,7 +379,7 @@ export default function SignCanvasPage() {
 
                 <div className="text-[10px] font-mono text-ink-faint space-y-0.5">
                   <div>Timestamp: 24-Oct-2024 10:14:22 BST</div>
-                  <div>NID Hash: 7b31c9a8...00ea (ECDSA P-256)</div>
+                  <div>Signer Digest: 7b31c9a8...00ea (SHA-256)</div>
                 </div>
               </div>
 
@@ -670,7 +670,7 @@ export default function SignCanvasPage() {
 
             {/* Consent Footer Statement */}
             <div className="text-[11px] text-ink-faint leading-relaxed border-t border-border pt-3">
-              By clicking <strong>Adopt and Affix Seal</strong>, you consent that this signature is legally binding under Section 7 of the Bangladesh ICT Act 2006 and will be permanently linked to NID Verification #***-***-9120 and IP 103.114.98.24.
+              By clicking <strong>Adopt and Affix Seal</strong>, you consent that this signature is legally binding under Section 7 of the Bangladesh ICT Act 2006 and will be permanently linked to your verified email and IP 103.114.98.24.
             </div>
 
             {/* Modal Actions */}

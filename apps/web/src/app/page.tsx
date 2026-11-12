@@ -40,7 +40,7 @@ export default function LandingPage() {
 
   // Interactive state for simulator canvas
   const [activeSigner, setActiveSigner] = useState<'ayesha' | 'tanvir'>('tanvir');
-  const [placedField, setPlacedField] = useState<'signature' | 'date' | 'nid' | 'stamp'>('signature');
+  const [placedField, setPlacedField] = useState<'signature' | 'date' | 'identity' | 'stamp'>('signature');
   const [fieldPosition, setFieldPosition] = useState({ x: 55, y: 70 });
 
   // Interactive state for AI summary language toggle
@@ -64,7 +64,7 @@ export default function LandingPage() {
     },
     {
       q: 'Can I pay subscription charges in Bangladeshi Taka (BDT)?',
-      a: 'Absolutely. We support direct local billing in BDT (৳) and corporate invoices. All invoices include registered BIN numbers and automated Mushak 6.3 challans for NBR corporate tax audits.',
+      a: 'Absolutely. We support direct local billing in BDT (৳) and corporate invoices. All invoices include registered BIN numbers for corporate compliance.',
     },
   ];
 
@@ -179,7 +179,7 @@ export default function LandingPage() {
                       Ayesha Rahman
                     </div>
                     <div className="font-mono text-[10px] text-ink-faint truncate">
-                      SHA256: 8a4f9b2c...ec01 · NID Verified
+                      SHA256: 8a4f9b2c...ec01 · Verified Signatory
                     </div>
                     <div className="text-[10px] text-ink-faint">
                       24 Feb 2025 • 14:32 BST
@@ -327,16 +327,16 @@ export default function LandingPage() {
 
                 <button
                   type="button"
-                  onClick={() => setPlacedField('nid')}
+                  onClick={() => setPlacedField('identity')}
                   className={`p-3 rounded-[8px] border text-left text-xs space-y-1 transition-all ${
-                    placedField === 'nid'
+                    placedField === 'identity'
                       ? 'bg-pine-100 border-pine-600 text-pine-900 font-bold'
                       : 'bg-surface border-border hover:bg-surface-raised text-ink-soft'
                   }`}
                 >
                   <ShieldCheck className="w-4 h-4 text-brass-600" />
-                  <div>NID / Smart Card</div>
-                  <div className="text-[10px] text-ink-faint font-normal">10/17 Digit Verification</div>
+                  <div>Signer Identity</div>
+                  <div className="text-[10px] text-ink-faint font-normal">Authorized ID Reference</div>
                 </button>
 
                 <button
@@ -656,8 +656,7 @@ export default function LandingPage() {
             Priced for Sustainable Local Commerce
           </h2>
           <p className="text-sm sm:text-base text-ink-soft max-w-2xl mx-auto">
-            Billed transparently in BDT with auto-generated Mushak 6.3 VAT tax invoices.
-            Pay via bKash, Nagad, or Bank Wire.
+            Transparent and accessible commercial plans for Bangladeshi enterprises.
           </p>
         </div>
 
@@ -714,8 +713,8 @@ export default function LandingPage() {
                 <p className="text-xs text-ink-soft mt-1">Tailored for manufacturing units, buying houses, and legal firms.</p>
               </div>
 
-              <div className="text-3xl font-bold text-pine-900 font-mono">
-                ৳1,499 <span className="text-sm font-normal text-ink-soft font-body">/ month</span>
+              <div className="text-2xl font-bold text-pine-900 font-mono">
+                Pricing TBD
               </div>
 
               <ul className="space-y-3 text-xs text-ink-soft">
@@ -754,8 +753,8 @@ export default function LandingPage() {
                 <p className="text-xs text-ink-soft mt-1">Unlimited scale with dedicated API webhooks and ERP integration.</p>
               </div>
 
-              <div className="text-3xl font-bold text-pine-900 font-mono">
-                ৳3,999 <span className="text-sm font-normal text-ink-soft font-body">/ month</span>
+              <div className="text-2xl font-bold text-pine-900 font-mono">
+                Pricing TBD
               </div>
 
               <ul className="space-y-3 text-xs text-ink-soft">

@@ -83,7 +83,7 @@ export default function NotFoundPage() {
 
       {/* Footer */}
       <div className="max-w-3xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
-        SignDesk Sovereign PKI Network • Dhaka Node 01
+        SignDesk Sovereign Cloud • Dhaka Node 01
       </div>
     </div>
   );

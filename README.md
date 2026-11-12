@@ -82,7 +82,7 @@ SignDesk/
 │   ├── web/                     # Next.js 15 App Router Frontend (27 Stitch Screens)
 │   │   ├── src/app/
 │   │   │   ├── page.tsx         # [Screen 1] Public Marketing Landing Page
-│   │   │   ├── signin/          # [Screen 2] Sender Authentication (PKI-bound)
+│   │   │   ├── signin/          # [Screen 2] Sender Authentication (Email Magic Link / Password)
 │   │   │   ├── signup/          # [Screen 3] Workspace Onboarding Registration
 │   │   │   ├── dashboard/       # [Screen 4] Executive Workspace Dashboard
 │   │   │   ├── envelopes/
@@ -113,7 +113,7 @@ SignDesk/
 │   │   │   │   ├── workspace/   # [Screen 21] Workspace & Registered Entity Details
 │   │   │   │   ├── team/        # [Screen 22] Team Governance & Signatory Seats
 │   │   │   │   ├── developer/   # [Screen 23] Production API Keys & Webhooks
-│   │   │   │   ├── billing/     # [Screen 24A] Billing & NBR Mushak-6.3 Tax Invoices
+│   │   │   │   ├── billing/     # [Screen 24A] Billing & Subscription Management
 │   │   │   │   └── security/    # [Screen 24B] Active Sessions & 10-Yr Safe Harbor
 │   │   │   ├── pricing/         # [Screen 25] Transparent Pricing (BDT & Local Gateways)
 │   │   │   ├── legal/           # [Screen 26] Legal Enforceability under ICT Act 2006

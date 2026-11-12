@@ -161,7 +161,7 @@ export default function SignInPage() {
                     Institutional Email Address
                   </label>
                   <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-pine-100 text-pine-800 border border-pine-600/20">
-                    PKI BOUND
+                    SECURE SESSION
                   </span>
                 </div>
                 <div className="relative">
@@ -242,7 +242,7 @@ export default function SignInPage() {
                 <LogIn className="w-4 h-4" />
                 <span>
                   {loading
-                    ? 'Authenticating PKI Token...'
+                    ? 'Authenticating Session...'
                     : activeTab === 'magic'
                     ? 'Dispatch Secure Magic Link'
                     : 'Sign In to Workspace'}
@@ -273,7 +273,7 @@ export default function SignInPage() {
             <div className="text-xs space-y-1">
               <span className="font-bold text-pine-900 block">Signer Direct Access</span>
               <p className="text-ink-soft leading-relaxed">
-                Invited to review or sign an agreement? No account or sign-in needed — use the direct access link sent via WhatsApp or email.
+                Invited to review or sign an agreement? No account or sign-in needed — use the direct access link sent via email.
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export default function SignInPage() {
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center gap-4 text-[11px] text-ink-faint font-mono">
             <span className="inline-flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-pine-600" /> 256-Bit HSM Key Storage
+              <ShieldCheck className="w-3.5 h-3.5 text-pine-600" /> 256-Bit Encrypted Storage
             </span>
             <span>•</span>
             <span className="inline-flex items-center gap-1">
@@ -299,7 +299,7 @@ export default function SignInPage() {
             </span>
           </div>
           <p className="text-[10px] text-ink-faint font-mono">
-            Bangladesh Certified Public Key Infrastructure • Root CA Node: Dhaka-01
+            Simple Electronic Signature under Bangladesh ICT Act 2006
           </p>
         </div>
       </div>
