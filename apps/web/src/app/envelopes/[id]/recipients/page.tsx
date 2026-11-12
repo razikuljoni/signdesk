@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { apiFetch } from '@/lib/api';
 import { AuthGuard } from '@/components/auth-guard';
@@ -54,8 +54,9 @@ interface Party {
 
 function RecipientsPageContent() {
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
-  const envelopeId = searchParams.get('id') || '';
+  const envelopeId = (params?.id as string) || searchParams?.get('id') || '';
   const { user } = useAuth();
 
   const [envelope, setEnvelope] = useState<any>(null);

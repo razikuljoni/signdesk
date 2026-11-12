@@ -289,7 +289,7 @@ function PrepareContent() {
   const isValidToSend = unassignedFields.length === 0 && fields.length > 0;
 
   const handleProceedToSend = () => {
-    router.push(`/envelopes/prepare/recipients?id=${envelopeId}`);
+    router.push(`/envelopes/${envelopeId}/recipients`);
   };
 
   return (
