@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   ShieldCheck,
@@ -18,28 +19,132 @@ import {
   ChevronRight,
   Scale,
   XCircle,
+  AlertCircle
 } from 'lucide-react';
 
 export default function SignLandingPage() {
   const params = useParams();
   const router = useRouter();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
+
+  const [session, setSession] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
+  const [isDeclining, setIsDeclining] = useState(false);
 
-  const signerName = 'Tanvir Ahmed';
-  const signerRole = 'Managing Director, Meghna Distribution Corp.';
-  const signerEmail = 't.ahmed@meghnadist.com';
-  const senderName = 'Ayesha Rahman (Rahim Textiles & Trade Ltd.)';
-  const documentTitle = 'Rahim Traders — Commercial Supply Agreement';
-  const envelopeId = 'BD-2024-8849-ICT';
-  const expiresDate = '28 Oct 2024, 23:59 BST (4 days remaining)';
+  useEffect(() => {
+    if (!token) return;
 
-  const handleDecline = (e: React.FormEvent) => {
+    async function verifySession() {
+      try {
+        const data = await apiFetch(`/sign/${token}`);
+        if (data.status === 'voided') {
+          router.push(`/sign/${token}/voided`);
+          return;
+        }
+        if (data.status === 'declined') {
+          router.push(`/sign/${token}/declined`);
+          return;
+        }
+        if (data.status === 'already_signed') {
+          router.push(`/sign/${token}/already-signed`);
+          return;
+        }
+        if (data.status === 'expired') {
+          router.push(`/sign/${token}/expired`);
+          return;
+        }
+        setSession(data);
+      } catch (err: any) {
+        console.error('Failed to verify signing session:', err);
+        setError(err.message || 'Invalid or expired signing link');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    verifySession();
+  }, [token, router]);
+
+  const handleDecline = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/sign/${token}/declined`);
+    if (!declineReason.trim()) return;
+
+    setIsDeclining(true);
+    try {
+      await apiFetch(`/sign/${token}/decline`, {
+        method: 'POST',
+        body: JSON.stringify({
+          reasonPreset: 'OTHER',
+          reasonText: declineReason.trim(),
+        }),
+      });
+      router.push(`/sign/${token}/declined`);
+    } catch (err: any) {
+      console.error('Failed to decline envelope:', err);
+      setError(err.message || 'Failed to submit declination');
+      setIsDeclining(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <WaxSeal size={48} className="animate-spin mx-auto" />
+          <p className="text-xs font-mono text-ink-soft">Verifying cryptographic signing token...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !session) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="bg-surface rounded-2xl border border-border p-8 max-w-md w-full text-center space-y-4 shadow-warm">
+          <XCircle className="w-12 h-12 text-danger mx-auto" />
+          <h2 className="font-serif text-xl font-bold text-pine-900">Signing Link Unavailable</h2>
+          <p className="text-xs text-ink-soft">{error || 'This signing link is invalid or has expired.'}</p>
+          <Link href="/">
+            <button className="px-4 py-2 rounded-lg bg-pine-900 text-paper text-xs font-semibold">
+              Return to Homepage
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (session.status === 'pending_turn') {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="bg-surface rounded-2xl border border-border p-8 max-w-md w-full text-center space-y-4 shadow-warm">
+          <Clock className="w-12 h-12 text-amber-600 mx-auto" />
+          <h2 className="font-serif text-xl font-bold text-pine-900">Pending Prior Signer</h2>
+          <p className="text-xs text-ink-soft">
+            This document enforces sequential signing under the Bangladesh ICT Act 2006. Previous signers must complete their execution before your turn opens.
+          </p>
+          <div className="p-3 bg-paper rounded-lg border border-border text-xs font-mono text-pine-900">
+            {session.envelopeTitle}
+          </div>
+          <p className="text-[11px] text-ink-faint">You will receive an automated notification as soon as your turn begins.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const signerName = session.recipientName || 'Authorized Signatory';
+  const signerRole = session.recipientRole || 'Signer';
+  const signerEmail = session.recipientEmail || '';
+  const senderName = session.senderName || 'Document Sender';
+  const documentTitle = session.envelopeTitle || 'Document for Signature';
+  const envelopeId = session.envelopeId || token.slice(0, 12);
+  const expiresDate = session.expiresAt
+    ? new Date(session.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '14 days';
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans flex flex-col justify-between p-4 sm:p-6 lg:p-8">
@@ -55,7 +160,7 @@ export default function SignLandingPage() {
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
             <span>ICT Act 2006 Validated</span>
           </span>
-          <span className="text-xs font-mono text-ink-faint">Dhaka Sovereign Node</span>
+          <span className="text-xs font-mono text-ink-faint hidden sm:inline">Dhaka Sovereign Node</span>
         </div>
       </div>
 
@@ -85,13 +190,13 @@ export default function SignLandingPage() {
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <span className="text-[10px] font-mono uppercase text-ink-faint">Designated Signatory</span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                NID 2FA READY
+                VERIFIED RECIPIENT
               </span>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pine-900 text-paper font-serif font-bold text-sm flex items-center justify-center">
-                TA
+              <div className="w-10 h-10 rounded-full bg-pine-900 text-paper font-serif font-bold text-sm flex items-center justify-center shrink-0">
+                {signerName.slice(0, 2).toUpperCase()}
               </div>
               <div>
                 <div className="font-bold text-pine-900 text-sm">{signerName}</div>
@@ -103,11 +208,11 @@ export default function SignLandingPage() {
             <div className="pt-2 border-t border-border grid grid-cols-2 gap-2 text-[11px] font-mono text-ink-soft">
               <div>
                 <span className="text-ink-faint">Envelope ID: </span>
-                <span className="text-pine-900 font-semibold">{envelopeId}</span>
+                <span className="text-pine-900 font-semibold">{envelopeId.slice(0, 14)}</span>
               </div>
               <div className="text-right">
-                <span className="text-ink-faint">Validity: </span>
-                <span className="text-amber-800">{expiresDate}</span>
+                <span className="text-ink-faint">Expires: </span>
+                <span className="text-amber-800 font-semibold">{expiresDate}</span>
               </div>
             </div>
           </div>
@@ -185,7 +290,7 @@ export default function SignLandingPage() {
                   rows={4}
                   value={declineReason}
                   onChange={(e) => setDeclineReason(e.target.value)}
-                  placeholder="e.g. Terms require revision before bilateral execution..."
+                  placeholder="e.g. Terms require revision before execution..."
                   className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-vermilion/20 focus:border-vermilion text-xs"
                 />
               </div>
@@ -194,15 +299,17 @@ export default function SignLandingPage() {
                 <button
                   type="button"
                   onClick={() => setShowDeclineModal(false)}
+                  disabled={isDeclining}
                   className="px-3.5 py-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-vermilion hover:bg-vermilion-hover text-paper text-xs font-bold shadow-sm"
+                  disabled={isDeclining || !declineReason.trim()}
+                  className="px-4 py-1.5 rounded-lg bg-danger text-paper text-xs font-semibold hover:bg-danger/90 disabled:opacity-50"
                 >
-                  Submit Declination
+                  {isDeclining ? 'Submitting...' : 'Confirm Declination'}
                 </button>
               </div>
             </form>

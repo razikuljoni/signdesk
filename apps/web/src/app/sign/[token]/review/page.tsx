@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Sparkles,
@@ -30,13 +31,60 @@ import {
 export default function SignReviewPage() {
   const params = useParams();
   const router = useRouter();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
+  const [session, setSession] = useState<any>(null);
+  const [summary, setSummary] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [aiLang, setAiLang] = useState<'en' | 'bn'>('en');
   const [consentAgreed, setConsentAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
+  const [isDeclining, setIsDeclining] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+
+    async function loadData() {
+      try {
+        const [sessData, summData] = await Promise.all([
+          apiFetch(`/sign/${token}`),
+          apiFetch(`/sign/${token}/summary`).catch((e) => {
+            console.warn('AI summary failed or not available:', e);
+            return null;
+          }),
+        ]);
+
+        if (sessData.status === 'voided') {
+          router.push(`/sign/${token}/voided`);
+          return;
+        }
+        if (sessData.status === 'declined') {
+          router.push(`/sign/${token}/declined`);
+          return;
+        }
+        if (sessData.status === 'already_signed') {
+          router.push(`/sign/${token}/already-signed`);
+          return;
+        }
+        if (sessData.status === 'expired') {
+          router.push(`/sign/${token}/expired`);
+          return;
+        }
+
+        setSession(sessData);
+        setSummary(summData);
+      } catch (err: any) {
+        console.error('Failed to load review data:', err);
+        setError(err.message || 'Failed to load document review');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [token, router]);
 
   const handleProceed = () => {
     if (!consentAgreed) {
@@ -48,10 +96,45 @@ export default function SignReviewPage() {
     router.push(`/sign/${token}/sign`);
   };
 
-  const handleDeclineSubmit = (e: React.FormEvent) => {
+  const handleDeclineSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(`/sign/${token}/declined`);
+    if (!declineReason.trim()) return;
+
+    setIsDeclining(true);
+    try {
+      await apiFetch(`/sign/${token}/decline`, {
+        method: 'POST',
+        body: JSON.stringify({
+          reasonPreset: 'OTHER',
+          reasonText: declineReason.trim(),
+        }),
+      });
+      router.push(`/sign/${token}/declined`);
+    } catch (err: any) {
+      console.error('Failed to decline envelope:', err);
+      setError(err.message || 'Failed to submit declination');
+      setIsDeclining(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-paper flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <WaxSeal size={48} className="animate-spin mx-auto" />
+          <p className="text-xs font-mono text-ink-soft">Loading document & AI review chamber...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const documentTitle = session?.envelopeTitle || 'Document Review';
+  const envelopeId = session?.envelopeId || token.slice(0, 12);
+  const expiresDate = session?.expiresAt
+    ? new Date(session.expiresAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : '14 days';
+  const senderName = session?.senderName || 'Sender';
+  const recipientName = session?.recipientName || 'Signer';
 
   return (
     <div className="min-h-screen bg-paper text-ink font-sans pb-24">
@@ -59,19 +142,19 @@ export default function SignReviewPage() {
       <div className="border-b border-border bg-surface px-6 py-3.5 sticky top-0 z-30 shadow-subtle">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
+            <Link href={`/sign/${token}`} className="flex items-center gap-2 text-pine-900 font-serif font-bold text-lg">
               <WaxSeal size={28} />
               <span>SignDesk</span>
             </Link>
             <span className="text-ink-faint">|</span>
             <div className="text-xs">
               <span className="font-semibold text-pine-900 block truncate max-w-xs sm:max-w-md">
-                Rahim Traders — Commercial Supply Agreement
+                {documentTitle}
               </span>
               <div className="flex items-center gap-2 text-[11px] font-mono text-ink-faint">
                 <span className="flex items-center gap-1 text-pine-800">
                   <Lock className="w-3 h-3" />
-                  <span>Envelope: BD-2024-8849-ICT</span>
+                  <span>Envelope: #{envelopeId.slice(0, 10)}</span>
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1 text-emerald-800 font-semibold">
@@ -81,7 +164,7 @@ export default function SignReviewPage() {
                 <span>•</span>
                 <span className="flex items-center gap-1 text-amber-800">
                   <Clock className="w-3 h-3" />
-                  <span>Expires in 4 days</span>
+                  <span>Expires {expiresDate}</span>
                 </span>
               </div>
             </div>
@@ -131,6 +214,13 @@ export default function SignReviewPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+        {error && (
+          <div className="p-4 rounded-xl bg-danger-bg border border-danger/30 text-danger text-xs font-medium flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         {/* Gemini Contract Intelligence (Bilingual AI Legal Summary Card) */}
         <div className="bg-surface rounded-xl border-2 border-pine-800/40 shadow-warm overflow-hidden">
           <div className="bg-pine-900 text-paper px-5 py-3.5 flex items-center justify-between">
@@ -147,7 +237,21 @@ export default function SignReviewPage() {
           </div>
 
           <div className="p-5 space-y-4 text-xs">
-            {aiLang === 'en' ? (
+            {summary?.bullets && summary.bullets.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {summary.bullets.map((bullet: any, idx: number) => (
+                  <div key={idx} className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
+                    <div className="flex items-center gap-2 text-pine-900 font-semibold">
+                      <Handshake className="w-4 h-4 text-pine-800" />
+                      <span>{bullet.label}</span>
+                    </div>
+                    <p className="text-ink-soft leading-relaxed text-[11px]">
+                      {bullet.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : aiLang === 'en' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
@@ -155,38 +259,38 @@ export default function SignReviewPage() {
                     <span>Counterparties & Legal Standing</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    <strong>Originator (Supplier):</strong> Rahim Textiles & Trade Ltd., Tejgaon I/A Dhaka.<br />
-                    <strong>Buyer (Signer 2):</strong> Meghna Distribution Corp., Port Zone Chittagong.
+                    <strong>Originator:</strong> {senderName}<br />
+                    <strong>Signatory:</strong> {recipientName}
                   </p>
                 </div>
 
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
                     <CreditCard className="w-4 h-4 text-pine-800" />
-                    <span>Consideration & Payment Terms</span>
+                    <span>Consideration & Obligations</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    Total contract value: <strong>৳1,450,000 BDT</strong> (30% advance via irrevocable LC/RTGS, remaining 70% within 45 days against delivery challan).
+                    Bilateral commercial terms under Bangladesh law. Mutual performance obligations governed by contract clauses.
                   </p>
                 </div>
 
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
                     <Truck className="w-4 h-4 text-pine-800" />
-                    <span>Delivery & BSTI Quality Mandate</span>
+                    <span>Execution & Validity</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    240,000 metric yards combed cotton weave delivered to Agrabad Depot. Mandatory BSTI inspection batch 2024/Q4.
+                    Standard bilateral agreement executed via sovereign digital signature token. Valid upon execution by all designated parties.
                   </p>
                 </div>
 
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
                     <Scale className="w-4 h-4 text-pine-800" />
-                    <span>Arbitration & Force Majeure</span>
+                    <span>Jurisdiction & Evidentiary Standard</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    Clause 4.2 binding arbitration under Bangladesh Arbitration Act 2001 (Dhaka Venue). Liquidated damages capped at 5%. Chittagong port blockades qualify as Force Majeure.
+                    Governed by the laws of Bangladesh. Admissible under Section 7 of the Bangladesh ICT Act 2006.
                   </p>
                 </div>
               </div>
@@ -195,45 +299,30 @@ export default function SignReviewPage() {
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
                     <Handshake className="w-4 h-4 text-pine-800" />
-                    <span>পক্ষসমূহ ও আইনি অবস্থান</span>
+                    <span>চুক্তিভুক্ত পক্ষসমূহ</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    <strong>সরবরাহকারী (প্রথম পক্ষ):</strong> রহিম টেক্সটাইলস অ্যান্ড ট্রেড লিঃ, তেজগাঁও শিল্প এলাকা, ঢাকা।<br />
-                    <strong>ক্রেতা (দ্বিতীয় পক্ষ):</strong> মেঘনা ডিস্ট্রিবিউশন কর্পোরেশন, চট্টগ্রাম বন্দর জোন।
-                  </p>
-                </div>
-
-                <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
-                  <div className="flex items-center gap-2 text-pine-900 font-semibold">
-                    <CreditCard className="w-4 h-4 text-pine-800" />
-                    <span>মোট মূল্য এবং পরিশোধের শর্ত</span>
-                  </div>
-                  <p className="text-ink-soft leading-relaxed text-[11px]">
-                    সর্বমোট চুক্তি মূল্য: <strong>১৪,৫০,০০০ টাকা</strong>। ৩০% অগ্রিম ব্যাংক এলসি/আরটিজিএস মারফত এবং অবশিষ্ট ৭০% চালান হস্তান্তরের ৪৫ দিনের মধ্যে প্রদেয়।
-                  </p>
-                </div>
-
-                <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
-                  <div className="flex items-center gap-2 text-pine-900 font-semibold">
-                    <Truck className="w-4 h-4 text-pine-800" />
-                    <span>পণ্য সরবরাহ এবং বিএসটিআই মানদণ্ড</span>
-                  </div>
-                  <p className="text-ink-soft leading-relaxed text-[11px]">
-                    ২,৪০,০০০ মিটার ইয়ার্ন সুতি ফ্যাব্রিক চট্টগ্রাম আগ্রাবাদ ডিপোতে ডেলিভারি। বাধ্যতামূলক বিএসটিআই (BSTI) কোয়ালিটি সনদ সংযুক্ত থাকতে হবে।
+                    <strong>প্রস্তাবক:</strong> {senderName}<br />
+                    <strong>স্বাক্ষরকারী:</strong> {recipientName}
                   </p>
                 </div>
 
                 <div className="bg-paper p-3.5 rounded-lg border border-border space-y-1">
                   <div className="flex items-center gap-2 text-pine-900 font-semibold">
                     <Scale className="w-4 h-4 text-pine-800" />
-                    <span>সালিশি এবং বাধ্যতামূলক বিধান</span>
+                    <span>আইনি এখতিয়ার</span>
                   </div>
                   <p className="text-ink-soft leading-relaxed text-[11px]">
-                    ধারা ৪.২: সালিশ আইন ২০০১ এর অধীন ঢাকা এখতিয়ারভূক্ত। ক্ষতিপূরণের সর্বোচ্চ সীমা ৫%। বন্দর অবরোধ বা হরতাল ফোর্সম্যাজিউর হিসেবে বিবেচিত হবে।
+                    বাংলাদেশ তথ্য ও যোগাযোগ প্রযুক্তি আইন ২০০৬-এর ধারা ৭ অনুযায়ী ডিজিটাল স্বাক্ষর আইনগতভাবে সম্পূর্ণ বৈধ ও আদালতে প্রমাণযোগ্য।
                   </p>
                 </div>
               </div>
             )}
+
+            <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-ink-faint">
+              <span>{summary?.disclaimer || 'SignDesk AI Assistant summary. Please review the full agreement before signing.'}</span>
+              <span className="font-mono">Gemini 1.5 Flash</span>
+            </div>
           </div>
         </div>
 
@@ -277,13 +366,13 @@ export default function SignReviewPage() {
                 </div>
                 <div>
                   <div className="font-semibold text-pine-900 flex items-center gap-1.5">
-                    <span>2. Tanvir Ahmed (YOUR TURN)</span>
+                    <span>{recipientName} (YOUR TURN)</span>
                     <span className="text-[10px] font-mono font-bold text-vermilion uppercase">
                       Action Required
                     </span>
                   </div>
                   <div className="text-[11px] text-ink-soft">
-                    Managing Director, Meghna Distribution Corp. • Action pending: 1 Signature field
+                    {session?.recipientRole || 'Authorized Signatory'} • Action pending: Execution
                   </div>
                 </div>
               </div>
@@ -410,8 +499,8 @@ export default function SignReviewPage() {
                 </span>
               </div>
 
-              <div className="font-bold text-xs text-pine-900">Tanvir Ahmed</div>
-              <div className="text-[11px] text-ink-soft">Managing Director, Meghna Distribution Corp.</div>
+              <div className="font-bold text-xs text-pine-900">{recipientName}</div>
+              <div className="text-[11px] text-ink-soft">{session?.recipientRole || 'Signatory'}</div>
 
               <div className="py-4 border border-dashed border-vermilion/40 rounded-lg flex items-center justify-center gap-2 text-vermilion text-xs font-semibold group-hover:scale-[1.01] transition-transform">
                 <PenTool className="w-4 h-4" />
@@ -457,7 +546,7 @@ export default function SignReviewPage() {
                   Decline Bilateral Agreement
                 </h3>
                 <p className="text-xs text-ink-soft">
-                  Provide grounds for non-execution to sender Ayesha Rahman.
+                  Provide grounds for non-execution to sender {senderName}.
                 </p>
               </div>
             </div>
@@ -472,28 +561,30 @@ export default function SignReviewPage() {
                   rows={4}
                   value={declineReason}
                   onChange={(e) => setDeclineReason(e.target.value)}
-                  placeholder="e.g. Clause 14 indemnity needs revision — liability cap needs to align with bilateral 5% agreement..."
+                  placeholder="e.g. Terms require revision before execution..."
                   className="w-full p-2.5 rounded-lg border border-border bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-vermilion/20 focus:border-vermilion text-xs"
                 />
               </div>
 
               <div className="p-3 rounded-lg bg-paper border border-border text-[11px] text-ink-soft">
-                Declining will formally void your designated signing nonce under Section 7 ICT Act procedures and notify all parties.
+                Declining will formally record non-assent under Section 7 ICT Act procedures and notify all parties.
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowDeclineModal(false)}
+                  disabled={isDeclining}
                   className="px-3.5 py-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-vermilion hover:bg-vermilion-hover text-paper text-xs font-bold shadow-sm"
+                  disabled={isDeclining || !declineReason.trim()}
+                  className="px-4 py-1.5 rounded-lg bg-danger text-paper text-xs font-bold shadow-sm hover:bg-danger/90 disabled:opacity-50"
                 >
-                  Submit Declination
+                  {isDeclining ? 'Submitting...' : 'Submit Declination'}
                 </button>
               </div>
             </form>

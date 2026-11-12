@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { AuthGuard } from '@/components/auth-guard';
+import { apiFetch } from '@/lib/api';
 import {
   ArrowLeft,
   ArrowRight,
@@ -44,9 +45,10 @@ function NewEnvelopeContent() {
   const [fileDataUrl, setFileDataUrl] = useState<string | null>(null);
   const [fileHash, setFileHash] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState<number>(3);
-  const [title, setTitle] = useState('Rahim Traders — Commercial Supply Agreement 2025');
+  const [title, setTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isHashing, setIsHashing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // Compute SHA-256 hash using native Web Crypto API
   const computeSha256 = async (buffer: BufferSource): Promise<string> => {
@@ -76,7 +78,7 @@ function NewEnvelopeContent() {
       const hash = await computeSha256(arrayBuffer);
       setFileHash(hash);
       setFile(selectedFile);
-      if (!title || title === 'Rahim Traders — Commercial Supply Agreement 2025') {
+      if (!title) {
         setTitle(selectedFile.name.replace(/\.pdf$/i, ''));
       }
 
@@ -109,50 +111,32 @@ function NewEnvelopeContent() {
     setIsHashing(false);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!title.trim()) {
       setError('Please provide a title for this agreement.');
       return;
     }
 
-    const envelopeId = 'env_' + Date.now();
-    const newDraft = {
-      id: envelopeId,
-      title: title.trim(),
-      originalHash: fileHash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      originalPdfUrl: fileDataUrl || '/samples/bd-standard-nda.pdf',
-      pageCount: pageCount || 3,
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      recipients: [
-        {
-          id: 'rec_1',
-          name: 'Ayesha Rahman',
-          email: 'ayesha.rahman@rahimtraders.com',
-          role: 'SIGNER',
-          order: 1,
-          color: '#0C2E29',
-          status: 'pending',
-        },
-        {
-          id: 'rec_2',
-          name: 'Tanvir Ahmed',
-          email: 'tanvir@meghnadist.com',
-          role: 'SIGNER',
-          order: 2,
-          color: '#B3402A',
-          status: 'pending',
-        },
-      ],
-      fields: [],
-    };
+    setSubmitting(true);
+    setError(null);
+    try {
+      const originalPdfUrl = fileDataUrl || '/samples/bd-standard-nda.pdf';
+      const originalHash = fileHash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
 
-    const existingEnvelopes = JSON.parse(localStorage.getItem('signdesk_envelopes') || '[]');
-    existingEnvelopes.unshift(newDraft);
-    localStorage.setItem('signdesk_envelopes', JSON.stringify(existingEnvelopes));
-    localStorage.setItem(`signdesk_env_${envelopeId}`, JSON.stringify(newDraft));
+      const res = await apiFetch<any>('/envelopes', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: title.trim(),
+          originalPdfUrl,
+          originalHash,
+        }),
+      });
 
-    router.push(`/envelopes/${envelopeId}/prepare`);
+      router.push(`/envelopes/${res.id}/prepare`);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create envelope draft');
+      setSubmitting(false);
+    }
   };
 
   return (

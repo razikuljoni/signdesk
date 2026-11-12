@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
 import { SettingsNav } from '@/components/settings/settings-nav';
+import { useAuth } from '@/lib/auth-context';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   User,
@@ -13,6 +15,7 @@ import {
   Save,
   Check,
   Lock,
+  AlertCircle
 } from 'lucide-react';
 
 export default function ProfileSettingsPage() {
@@ -24,16 +27,47 @@ export default function ProfileSettingsPage() {
 }
 
 function ProfileSettingsContent() {
-  const [fullName, setFullName] = useState('Ayesha Rahman');
-  const [roleTitle, setRoleTitle] = useState('Managing Director');
-  const email = 'ayesha.rahman@rahimtraders.com';
+  const { user } = useAuth();
+  const [fullName, setFullName] = useState(user?.name || '');
+  const [roleTitle, setRoleTitle] = useState('Administrator / Signatory');
+  const [email, setEmail] = useState(user?.email || '');
   const [timezone, setTimezone] = useState('Asia/Dhaka (BST UTC+06:00)');
   const [savedNotice, setSavedNotice] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = (e: React.FormEvent) => {
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const profile = await apiFetch('/auth/profile');
+        if (profile) {
+          if (profile.name) setFullName(profile.name);
+          if (profile.email) setEmail(profile.email);
+        }
+      } catch (err) {
+        console.warn('Could not fetch profile from API:', err);
+      }
+    }
+    loadProfile();
+  }, []);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavedNotice(true);
-    setTimeout(() => setSavedNotice(false), 2500);
+    setIsSaving(true);
+    setError(null);
+    try {
+      await apiFetch('/auth/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: fullName }),
+      });
+      setSavedNotice(true);
+      setTimeout(() => setSavedNotice(false), 2500);
+    } catch (err: any) {
+      console.error('Failed to update profile:', err);
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (

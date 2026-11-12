@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthGuard } from '@/components/auth-guard';
 import { SettingsNav } from '@/components/settings/settings-nav';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   Users,
@@ -29,18 +30,71 @@ export default function TeamSettingsPage() {
 }
 
 function TeamSettingsContent() {
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Sender' | 'Viewer'>('Sender');
   const [mandate2fa, setMandate2fa] = useState(true);
   const [inviteNotice, setInviteNotice] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInviting, setIsInviting] = useState(false);
 
-  const handleSendInvite = (e: React.FormEvent) => {
+  async function loadMembers() {
+    try {
+      const data = await apiFetch('/workspaces/current/members');
+      if (Array.isArray(data)) {
+        setMembers(data);
+      }
+    } catch (err) {
+      console.warn('Could not fetch members:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInviteNotice(true);
-    setInviteEmail('');
-    setInviteName('');
-    setTimeout(() => setInviteNotice(false), 3000);
+    if (!inviteEmail.trim()) return;
+
+    setIsInviting(true);
+    setError(null);
+
+    try {
+      await apiFetch('/workspaces/current/members', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          name: inviteName.trim() || undefined,
+          role: inviteRole.toUpperCase(),
+        }),
+      });
+
+      setInviteNotice(true);
+      setInviteEmail('');
+      setInviteName('');
+      setTimeout(() => setInviteNotice(false), 3000);
+      loadMembers();
+    } catch (err: any) {
+      console.error('Failed to invite member:', err);
+      setError(err.message || 'Failed to send invitation');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Are you sure you want to remove this member from the workspace?')) return;
+    try {
+      await apiFetch(`/workspaces/current/members/${memberId}`, { method: 'DELETE' });
+      loadMembers();
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove member');
+    }
   };
 
   return (
@@ -67,20 +121,28 @@ function TeamSettingsContent() {
           <SettingsNav />
         </div>
 
+        {/* Content Area */}
         <div className="lg:col-span-8 space-y-6">
+          {error && (
+            <div className="p-3 rounded-xl bg-danger-bg text-danger border border-danger/30 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           {/* Seat Usage Meter Card */}
           <div className="bg-surface rounded-xl border border-border p-5 shadow-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1.5 flex-1">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-semibold text-pine-900">
-                  Seat Usage: 3 of 5 seats occupied (60%)
+                  Seat Usage: {members.length} seats occupied
                 </span>
                 <span className="font-mono text-ink-faint text-[11px]">
                   Corporate Starter Plan
                 </span>
               </div>
               <div className="w-full bg-paper border border-border rounded-full h-2 overflow-hidden">
-                <div className="bg-pine-900 h-full rounded-full" style={{ width: '60%' }} />
+                <div className="bg-pine-900 h-full rounded-full" style={{ width: `${Math.min(100, (members.length / 5) * 100)}%` }} />
               </div>
             </div>
 
@@ -88,7 +150,7 @@ function TeamSettingsContent() {
               href="/pricing"
               className="px-3.5 py-1.5 rounded-lg border border-border bg-paper hover:bg-surface text-ink text-xs font-semibold whitespace-nowrap shadow-subtle transition-all"
             >
-              Upgrade to Enterprise Pro for Unlimited Seats
+              Manage Subscription Plan
             </a>
           </div>
 
@@ -123,7 +185,6 @@ function TeamSettingsContent() {
                 <label className="block text-ink font-medium mb-1">Full Legal Name</label>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Mehedi Hasan"
                   value={inviteName}
                   onChange={(e) => setInviteName(e.target.value)}
@@ -159,10 +220,11 @@ function TeamSettingsContent() {
 
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-xs font-semibold shadow-warm transition-all flex items-center gap-1.5"
+                  disabled={isInviting}
+                  className="px-4 py-2 rounded-lg bg-pine-900 hover:bg-pine-800 text-paper text-xs font-semibold shadow-warm transition-all flex items-center gap-1.5 disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5 text-brass" />
-                  <span>Send Institutional Invite</span>
+                  <span>{isInviting ? 'Sending Invite...' : 'Send Institutional Invite'}</span>
                 </button>
               </div>
             </div>
@@ -170,7 +232,7 @@ function TeamSettingsContent() {
             {inviteNotice && (
               <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-medium flex items-center gap-2">
                 <Check className="w-4 h-4 text-emerald-700" />
-                <span>Invitation token successfully dispatched via TLS SMTP and WhatsApp Gateway!</span>
+                <span>Invitation token successfully dispatched via TLS SMTP!</span>
               </div>
             )}
           </form>
@@ -181,7 +243,7 @@ function TeamSettingsContent() {
               <h3 className="font-serif font-bold text-sm text-pine-900">
                 Active Authorized Signatories
               </h3>
-              <span className="font-mono text-xs text-ink-faint">3 Active</span>
+              <span className="font-mono text-xs text-ink-faint">{members.length} Active</span>
             </div>
 
             <div className="overflow-x-auto">
@@ -190,132 +252,65 @@ function TeamSettingsContent() {
                   <tr>
                     <th className="py-2.5 px-4">Signatory & Identity</th>
                     <th className="py-2.5 px-4">Assigned Role</th>
-                    <th className="py-2.5 px-4">Authentication Method</th>
-                    <th className="py-2.5 px-4">Last Active (BST)</th>
+                    <th className="py-2.5 px-4">Member Since</th>
                     <th className="py-2.5 px-4">Status</th>
                     <th className="py-2.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {/* Row 1 */}
-                  <tr className="hover:bg-paper/40 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-pine-900">Ayesha Rahman</div>
-                      <div className="text-[11px] font-mono text-ink-faint">
-                        ayesha.rahman@rahimtrade.com.bd
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-pine-100 text-pine-900 border border-pine-200">
-                        Owner / Admin
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-ink-soft text-[11px]">
-                      FIPS HSM Token + WhatsApp OTP
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-ink-soft">
-                      Today, 11:28 BST
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        Active
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button className="text-xs text-pine-900 font-semibold hover:underline">
-                        Manage
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* Row 2 */}
-                  <tr className="hover:bg-paper/40 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-pine-900">Tanvir Ahmed</div>
-                      <div className="text-[11px] font-mono text-ink-faint">
-                        t.ahmed@meghnadist.com
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-paper text-ink-soft border border-border">
-                        Sender (Commercial Officer)
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-ink-soft text-[11px]">
-                      SMS 2FA + NID Verified
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-ink-soft">
-                      Yesterday, 17:15 BST
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        Active
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button className="text-xs text-pine-900 font-semibold hover:underline">
-                        Edit Role
-                      </button>
-                    </td>
-                  </tr>
-
-                  {/* Row 3 */}
-                  <tr className="hover:bg-paper/40 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-semibold text-pine-900">Kamal Uddin, Advocate</div>
-                      <div className="text-[11px] font-mono text-ink-faint">
-                        kamal.legal@dhkchambers.com
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-paper text-ink-soft border border-border">
-                        Viewer (Legal Counsel)
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-ink-soft text-[11px]">
-                      Supreme Court Bar Reg #DAC-4491
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-ink-soft">
-                      24 Oct, 09:30 BST
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        Active
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button className="text-xs text-pine-900 font-semibold hover:underline">
-                        Permissions
-                      </button>
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-xs font-mono text-ink-soft">
+                        Loading workspace signatories...
+                      </td>
+                    </tr>
+                  ) : members.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-xs font-mono text-ink-soft">
+                        No team members registered yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    members.map((m) => (
+                      <tr key={m.id} className="hover:bg-paper/40 transition-colors">
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-pine-900">{m.user?.name || 'Workspace Member'}</div>
+                          <div className="text-[11px] font-mono text-ink-faint">
+                            {m.user?.email || ''}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border ${
+                            m.role === 'OWNER' || m.role === 'ADMIN'
+                              ? 'bg-pine-100 text-pine-900 border-pine-200'
+                              : 'bg-paper text-ink-soft border-border'
+                          }`}>
+                            {m.role}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 font-mono text-[11px] text-ink-soft">
+                          {m.createdAt ? new Date(m.createdAt).toLocaleDateString('en-GB') : 'Active'}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            Active
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          {m.role !== 'OWNER' && (
+                            <button
+                              onClick={() => handleRemoveMember(m.id)}
+                              className="text-xs text-danger font-semibold hover:underline"
+                            >
+                              Remove
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          {/* Pending Invitations Card */}
-          <div className="bg-surface rounded-xl border border-border p-5 shadow-subtle space-y-3">
-            <div className="font-serif font-bold text-sm text-pine-900 pb-2 border-b border-border">
-              Pending Delegated Invitations (1)
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-lg bg-paper border border-border text-xs">
-              <div>
-                <div className="font-medium text-pine-900">mehedi@rahimtraders.com</div>
-                <div className="text-[11px] text-ink-faint font-mono">
-                  Invited as Sender on 24 Oct 2024 • Awaiting NID verification
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button className="px-2.5 py-1 rounded border border-border bg-surface text-ink text-xs font-semibold hover:bg-paper">
-                  Resend Invite
-                </button>
-                <button className="px-2.5 py-1 rounded text-vermilion text-xs hover:underline">
-                  Revoke Token
-                </button>
-              </div>
             </div>
           </div>
         </div>

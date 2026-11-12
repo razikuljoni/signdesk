@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   ShieldCheck,
@@ -20,13 +21,25 @@ import {
 
 export default function SignAlreadySignedPage() {
   const params = useParams();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
-  const signatory = 'Tanvir Ahmed (Managing Director, Meghna Distribution Corp.)';
-  const timestamp = '24 Oct 2024, 11:28:44 BST';
-  const biometricNID = 'Porichoy National ID 2FA Biometric Confirmation (#***-***-9120)';
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    apiFetch(`/sign/${token}`)
+      .then((data) => setSession(data))
+      .catch((err) => console.warn('Could not load session on already-signed page:', err));
+  }, [token]);
+
+  const signatory = session?.recipientName || 'Authorized Signatory';
+  const envelopeTitle = session?.envelopeTitle || 'Document Execution';
+  const timestamp = session?.signedAt
+    ? new Date(session.signedAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }) + ' BST'
+    : 'Completed';
   const markHash = 'e801fd2298ab41c098df2418e54738cb201948ad72081f92e4c2789311bcbb91';
   const merkleBlock = 'Block #0006 • CCA Bangladesh Root Trust';
+  const biometricNID = session?.recipientEmail ? `Verified (${session.recipientEmail})` : 'Verified Cryptographic Token';
 
   const handleDownload = () => {
     window.print();
@@ -108,14 +121,10 @@ export default function SignAlreadySignedPage() {
                 MUTUAL ASSENT SEALED
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-[11px] font-mono text-emerald-900 pt-1">
+            <div className="text-[11px] font-mono text-emerald-900 pt-1">
               <div className="flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Ayesha Rahman (Signed)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Tanvir Ahmed (Signed)</span>
+                <span>{signatory} (Signed)</span>
               </div>
             </div>
           </div>

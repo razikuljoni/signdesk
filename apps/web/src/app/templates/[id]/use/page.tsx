@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/auth-guard';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   FileText,
@@ -22,6 +23,7 @@ import {
   Building2,
   Lock,
   Check,
+  AlertCircle
 } from 'lucide-react';
 
 export default function UseTemplatePage() {
@@ -35,33 +37,79 @@ export default function UseTemplatePage() {
 function UseTemplateContent() {
   const params = useParams();
   const router = useRouter();
-  const id = (params.id as string) || 'commercial-supply';
+  const id = (params.id as string) || '';
+
+  const [template, setTemplate] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Role 2 inputs
-  const [signer2Name, setSigner2Name] = useState('Tanvir Ahmed');
-  const [signer2Email, setSigner2Email] = useState('tanvir@meghnadist.com');
-  const [signer2Phone, setSigner2Phone] = useState('+880 1711-884920');
+  const [signer2Name, setSigner2Name] = useState('');
+  const [signer2Email, setSigner2Email] = useState('');
+  const [signer2Phone, setSigner2Phone] = useState('');
   const [mandate2FA, setMandate2FA] = useState(true);
 
   // Role 3 inputs
-  const [witnessName, setWitnessName] = useState('Advocate Kamal Uddin');
-  const [witnessEmail, setWitnessEmail] = useState('legal@dcibar.org.bd');
+  const [witnessName, setWitnessName] = useState('');
+  const [witnessEmail, setWitnessEmail] = useState('');
 
   // Variables
-  const [contractValue, setContractValue] = useState('৳ 1,450,000 BDT');
-  const [deliveryTimeline, setDeliveryTimeline] = useState('30 Days FOB Chittagong Port Zone');
-  const [customNote, setCustomNote] = useState(
-    'Please review the bilateral supply deed. Clause 14 indemnity is aligned with standard 5% cap.'
-  );
-
+  const [envelopeTitle, setEnvelopeTitle] = useState('');
+  const [customNote, setCustomNote] = useState('');
+  const [contractValue, setContractValue] = useState('BDT 1,450,000');
+  const [deliveryTimeline, setDeliveryTimeline] = useState('45 Days from LC Issuance');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleDispatch = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!id) return;
+    async function loadTemplate() {
+      try {
+        const data = await apiFetch(`/templates/${id}`);
+        setTemplate(data);
+        setEnvelopeTitle(data.name || 'Commercial Contract');
+        setCustomNote(data.message || 'Please review and execute under Bangladesh ICT Act 2006.');
+      } catch (err: any) {
+        console.error('Failed to load template:', err);
+        setError(err.message || 'Template not found');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTemplate();
+  }, [id]);
+
+  const handleDispatch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!signer2Name.trim() || !signer2Email.trim()) {
+      setError('Please provide name and email for Signatory 2.');
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      router.push('/envelopes/sent');
-    }, 600);
+    setError(null);
+
+    try {
+      const res = await apiFetch(`/templates/${id}/use`, {
+        method: 'POST',
+        body: JSON.stringify({
+          title: envelopeTitle || template?.name || 'Contract from Template',
+          recipients: [
+            { role: 'SIGNER', name: signer2Name.trim(), email: signer2Email.trim() },
+            ...(witnessName.trim() ? [{ role: 'VIEWER', name: witnessName.trim(), email: witnessEmail.trim() }] : []),
+          ],
+        }),
+      });
+
+      if (res.envelopeId) {
+        router.push(`/envelopes/${res.envelopeId}/prepare`);
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      console.error('Failed to instantiate template:', err);
+      setError(err.message || 'Failed to generate contract from template.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -80,10 +128,10 @@ function UseTemplateContent() {
 
             <div>
               <div className="font-serif font-bold text-lg text-pine-900">
-                Deploy Specimen: Commercial Supply Agreement
+                Deploy Specimen: {template?.name || 'Document Template'}
               </div>
               <div className="text-[11px] font-mono text-ink-faint">
-                Template #TPL-BD-COMM-2024 • Section 7 ICT Act Compliant
+                Template #{id.slice(0, 12)} • Section 7 ICT Act Compliant
               </div>
             </div>
           </div>
@@ -112,6 +160,15 @@ function UseTemplateContent() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+        {error && (
+          <div className="p-3 mb-6 rounded-xl bg-danger-bg text-danger border border-danger/30 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">

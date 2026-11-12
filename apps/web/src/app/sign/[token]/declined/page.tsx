@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { apiFetch } from '@/lib/api';
 import { WaxSeal } from '@/components/ui/wax-seal';
 import {
   XCircle,
@@ -18,17 +19,25 @@ import {
 
 export default function SignDeclinedPage() {
   const params = useParams();
-  const token = (params.token as string) || 'demo_token';
+  const token = (params.token as string) || '';
 
-  const targetDoc = 'Rahim Traders — Commercial Supply Agreement (#ENV-BD-2024-8849-ICT)';
-  const decliningSignatory = 'Tanvir Ahmed (Managing Director, Meghna Distribution Corp.)';
-  const timestamp = '24 Oct 2024, 11:30:15 BST';
-  const rejectionGrounds =
-    'Clause 14 indemnity needs revision — liability cap needs to align with bilateral 5% agreement rather than unilateral indemnification';
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    apiFetch(`/sign/${token}`)
+      .then((data) => setSession(data))
+      .catch((err) => console.warn('Could not load session on declined page:', err));
+  }, [token]);
+
+  const targetDoc = session?.envelopeTitle || 'Commercial Agreement';
+  const decliningSignatory = session?.recipientName || 'Signatory';
+  const timestamp = new Date().toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }) + ' BST';
+  const rejectionGrounds = 'Terms require revision prior to execution.';
   const senderContact = {
-    name: 'Ayesha Rahman',
-    email: 'ayesha.rahman@rahimtraders.com',
-    phone: '+880 1711-884920',
+    name: session?.senderName || 'Document Sender',
+    email: session?.senderEmail || 'sender@signdesk.bd',
+    phone: '+880 1711-000000',
   };
 
   return (
