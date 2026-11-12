@@ -264,7 +264,7 @@ function EnvelopeSentContent() {
             Audit ledger initialized. Every interaction will be recorded in the tamper-evident Merkle hash chain with BST atomic timestamps. Admissible as primary digital evidence under Sections 6 and 7 of the Information &amp; Communication Technology Act (Bangladesh).
           </p>
           <div className="text-[11px] text-ink-faint font-mono pt-1">
-            SignDesk Node: dhaka-core-01.signdesk.bd • SHA-256 Ledger Anchored
+            SignDesk Sovereign Node • SHA-256 Ledger Anchored
           </div>
         </div>
 

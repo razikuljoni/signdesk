@@ -108,7 +108,7 @@ POST /v1/envelopes/{id}/send
       "email": "tanvir@apex-commerce.bd",
       "order": 1,
       "status": "NOTIFIED",
-      "magicLink": "https://signdesk.bd/sign/demo_token_tanvir"
+      "magicLink": "http://localhost:3000/sign/demo_token_tanvir"
     }
   ]
 }
