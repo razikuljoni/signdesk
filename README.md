@@ -1,6 +1,7 @@
 # SignDesk — E-Signature & Approval Workflow Platform
 
 <p align="center">
+  <a href="https://signdesk-three.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-signdesk--three.vercel.app-0C2E29?style=for-the-badge&logo=vercel" alt="Live Demo" /></a>
   <img src="https://img.shields.io/badge/Status-Production--Ready-success?style=for-the-badge&logo=shield" alt="Status: Production-Ready" />
   <img src="https://img.shields.io/badge/Bangladesh-ICT%20Act%202006%20Compliant-0C2E29?style=for-the-badge" alt="ICT Act 2006 Compliant" />
   <img src="https://img.shields.io/badge/Security-SHA--256%20Merkle%20Chained-B3402A?style=for-the-badge" alt="SHA-256 Merkle Chained" />
@@ -173,7 +174,7 @@ docker compose up -d
 ```
 
 This starts:
-- **Web Application:** `http://localhost:3000`
+- **Web Application:** [https://signdesk-three.vercel.app](https://signdesk-three.vercel.app) (Local: `http://localhost:3000`)
 - **Backend API:** `http://localhost:4000`
 - **MailHog (SMTP Inbox):** `http://localhost:8025`
 - **MinIO S3 Console:** `http://localhost:9001`
@@ -297,7 +298,7 @@ Enforces a 5-minute (300 seconds) replay tolerance window. Code examples in Node
 
 SignDesk is designed for seamless deployment:
 - **Single-Node Linux VPS:** Run via Docker Compose behind a Caddy reverse proxy with automated Let's Encrypt SSL/TLS.
-- **Cloud Decoupled:** Frontend on Vercel, Backend API on Railway / Render / DigitalOcean, PostgreSQL on Supabase/Neon, Redis on Upstash.
+- **Cloud Decoupled:** Frontend on Vercel ([https://signdesk-three.vercel.app](https://signdesk-three.vercel.app)), Backend API on Railway / Render / DigitalOcean, PostgreSQL on Supabase/Neon, Redis on Upstash.
 - **Email Deliverability in Bangladesh:** Full SPF, DKIM, and DMARC DNS record setup guide to ensure 100% inbox delivery on Gmail/Google Workspace.
 
 Read the full production ops guide in [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md).
