@@ -66,7 +66,7 @@ export function Footer() {
             </li>
             <li>
               <Link href="/security" className="hover:text-white transition-colors">
-                PKI Vault &amp; Cryptography
+                Tamper-Evident SHA-256 Audit Trail
               </Link>
             </li>
             <li>
@@ -106,7 +106,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-6">
           <Link href="/legal" className="hover:text-white transition-colors">Terms of Execution</Link>
-          <Link href="/security" className="hover:text-white transition-colors">PKI Vault Architecture</Link>
+          <Link href="/security" className="hover:text-white transition-colors">Security &amp; Audit Architecture</Link>
           <Link href="/signin" className="hover:text-white transition-colors">Client Portal</Link>
         </div>
       </div>

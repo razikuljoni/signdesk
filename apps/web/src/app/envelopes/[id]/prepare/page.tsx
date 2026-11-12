@@ -81,7 +81,7 @@ const PALETTE_FIELDS = [
 
 const BD_OFFICIAL_FIELDS = [
   { type: FieldType.TEXT, label: 'Company Seal / Stamp', icon: Award, defaultW: 0.24, defaultH: 0.08, customLabel: 'Official Company Seal' },
-  { type: FieldType.TEXT, label: 'National ID / NID', icon: Fingerprint, defaultW: 0.28, defaultH: 0.045, customLabel: 'Signer NID (10/17 Digit)' },
+  { type: FieldType.TEXT, label: 'Identification / Reg No.', icon: Fingerprint, defaultW: 0.28, defaultH: 0.045, customLabel: 'Signer ID / TIN Number' },
 ];
 
 export default function PrepareEnvelopePage() {
@@ -628,7 +628,7 @@ function PrepareContent() {
                 <div>
                   <strong className="text-pine-900 block font-sans">3. Fiscal Clearance &amp; Invoicing</strong>
                   <p>
-                    All consideration shall be routed via Bangladesh Bank authorized inland documentary Letter of Credit (L/C). Invoices shall be accompanied by NBR Mushak-6.3 tax challans.
+                    All consideration shall be routed via Bangladesh Bank authorized commercial banking channels. Invoices shall be accompanied by official tax documentation.
                   </p>
                 </div>
 
@@ -852,7 +852,7 @@ function PrepareContent() {
             </div>
             <div className="pt-2 border-t border-border flex items-center gap-1 text-[10px] text-ink-faint font-mono">
               <ShieldCheck className="w-3 h-3 text-pine-600" />
-              <span>ICT-Act Verifier Checked • PKI Cert</span>
+              <span>ICT-Act Verifier Checked • SHA-256 Audit Trail</span>
             </div>
           </div>
         </div>

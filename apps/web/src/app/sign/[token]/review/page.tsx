@@ -349,7 +349,7 @@ export default function SignReviewPage() {
                     1. Ayesha Rahman (COMPLETED)
                   </div>
                   <div className="text-[11px] text-ink-soft">
-                    Managing Director, Rahim Textiles & Trade Ltd. • 24 Oct, 11:20 BST • NID Verified
+                    Managing Director, Rahim Textiles & Trade Ltd. • 24 Oct, 11:20 BST • Identity Verified
                   </div>
                 </div>
               </div>

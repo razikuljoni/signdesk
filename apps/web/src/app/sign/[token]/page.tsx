@@ -259,7 +259,7 @@ export default function SignLandingPage() {
 
       {/* Footer */}
       <div className="max-w-4xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
-        SignDesk Sovereign Bangladesh PKI Network • Regulated by Controller of Certifying Authorities (CCA)
+        Simple Electronic Signature under Bangladesh ICT Act 2006 • Tamper-Evident SHA-256 Audit Trail
       </div>
 
       {/* Decline Rejection Modal */}

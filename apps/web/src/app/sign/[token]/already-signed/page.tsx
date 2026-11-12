@@ -38,8 +38,8 @@ export default function SignAlreadySignedPage() {
     ? new Date(session.signedAt).toLocaleString('en-GB', { timeZone: 'Asia/Dhaka' }) + ' BST'
     : 'Completed';
   const markHash = 'e801fd2298ab41c098df2418e54738cb201948ad72081f92e4c2789311bcbb91';
-  const merkleBlock = 'Block #0006 • CCA Bangladesh Root Trust';
-  const biometricNID = session?.recipientEmail ? `Verified (${session.recipientEmail})` : 'Verified Cryptographic Token';
+  const merkleBlock = 'Block #0006 • SHA-256 Audit Trail';
+  const verificationBadge = session?.recipientEmail ? `Verified (${session.recipientEmail})` : 'Verified Cryptographic Token';
 
   const handleDownload = () => {
     window.print();
@@ -102,12 +102,12 @@ export default function SignAlreadySignedPage() {
               </div>
 
               <div>
-                <span className="text-[10px] font-mono uppercase text-ink-faint">Biometric 2FA:</span>
-                <div className="font-mono text-[11px] text-emerald-800 font-semibold">{biometricNID}</div>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">Signer Verification:</span>
+                <div className="font-mono text-[11px] text-emerald-800 font-semibold">{verificationBadge}</div>
               </div>
 
               <div className="pt-2 border-t border-border">
-                <span className="text-[10px] font-mono uppercase text-ink-faint">ECDSA P-256 Mark Hash:</span>
+                <span className="text-[10px] font-mono uppercase text-ink-faint">SHA-256 Mark Hash:</span>
                 <div className="font-mono text-[10px] text-pine-900 truncate mt-0.5">{markHash}</div>
               </div>
             </div>

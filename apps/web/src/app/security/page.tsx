@@ -80,7 +80,7 @@ export default function SecurityArchitecturePage() {
           </div>
 
           <p className="text-xs text-ink-soft leading-relaxed">
-            In SignDesk&apos;s PKI engine, every uploaded contract and execution event produces a 256-bit (64 hexadecimal character) deterministic mathematical digest. If an adversary modifies a single punctuation mark or monetary figure in the PDF, the resulting hash mutates drastically, instantly invalidating the Certificate of Completion.
+            In SignDesk&apos;s cryptographic audit engine, every uploaded contract and execution event produces a 256-bit (64 hexadecimal character) deterministic mathematical digest. If an adversary modifies a single punctuation mark or monetary figure in the PDF, the resulting hash mutates drastically, instantly invalidating the Certificate of Completion.
           </p>
 
           <div className="p-4 rounded-xl bg-paper border border-border font-mono text-xs space-y-2">
@@ -123,7 +123,7 @@ export default function SecurityArchitecturePage() {
                 1. Encryption at Rest & Transit
               </h3>
               <p className="text-ink-soft leading-relaxed">
-                All communications mandate TLS 1.3 with AES-256 GCM authenticated encryption. Signing keypairs are generated and stored strictly inside FIPS 140-2 Level 3 Hardware Security Modules (HSMs).
+                All communications mandate TLS 1.3 with AES-256 GCM authenticated encryption. Sensitive data and cryptographic token hashes are stored strictly inside secure hardware-backed enclaves.
               </p>
             </div>
 
@@ -149,7 +149,7 @@ export default function SecurityArchitecturePage() {
                 3. Granular Zero-Trust Access
               </h3>
               <p className="text-ink-soft leading-relaxed">
-                Single-use cryptographic nonces expire automatically after 14 days. Signatories undergo two-factor authentication via WhatsApp OTP and National ID Porichoy verification with strict IP geofencing.
+                Single-use cryptographic nonces expire automatically after 14 days. Signatories undergo multi-factor authentication via secure email magic links with strict IP geofencing and audit tracking.
               </p>
             </div>
 
@@ -176,7 +176,7 @@ export default function SecurityArchitecturePage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs font-mono">
             <div className="p-3 bg-paper rounded-xl border border-border">
-              <div className="font-bold text-pine-900">CCA BD PKI</div>
+              <div className="font-bold text-pine-900">ICT Act 2006</div>
               <div className="text-[10px] text-ink-faint mt-0.5">Statutory Standard</div>
             </div>
             <div className="p-3 bg-paper rounded-xl border border-border">
@@ -188,8 +188,8 @@ export default function SecurityArchitecturePage() {
               <div className="text-[10px] text-ink-faint mt-0.5">Trust Services</div>
             </div>
             <div className="p-3 bg-paper rounded-xl border border-border">
-              <div className="font-bold text-pine-900">FIPS 140-2 L3</div>
-              <div className="text-[10px] text-ink-faint mt-0.5">HSM Enclave</div>
+              <div className="font-bold text-pine-900">FIPS 180-4</div>
+              <div className="text-[10px] text-ink-faint mt-0.5">SHA-256 Digest</div>
             </div>
             <div className="p-3 bg-paper rounded-xl border border-border col-span-2 sm:col-span-1">
               <div className="font-bold text-pine-900">NTP-BD-01</div>

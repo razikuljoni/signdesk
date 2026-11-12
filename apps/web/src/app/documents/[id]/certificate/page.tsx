@@ -166,14 +166,14 @@ function CertificateOfCompletionContent() {
                 Certificate of Completion
               </h1>
               <p className="text-xs text-ink-soft max-w-xl">
-                Tamper-evident legal certificate proving electronic assent, cryptographic timestamps, and biometric mark affixation.
+                Simple Electronic Signature under Bangladesh ICT Act 2006. Tamper-evident legal certificate proving electronic assent, timestamps, and unbroken SHA-256 audit hash chain.
               </p>
             </div>
 
             <div className="shrink-0 text-right">
               <WaxSeal size={56} className="mx-auto" />
               <div className="text-[10px] font-mono font-bold text-pine-900 uppercase mt-2">
-                CCA BD APPROVED
+                ICT ACT 2006 (SEC. 7)
               </div>
             </div>
           </div>
@@ -250,10 +250,10 @@ function CertificateOfCompletionContent() {
           <div className="pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-soft">
             <div className="space-y-1 text-center sm:text-left">
               <div className="font-bold text-pine-900">
-                SignDesk Technologies Ltd. (Sovereign Cloud PKI Vault)
+                Simple Electronic Signature under Bangladesh ICT Act 2006 • SignDesk Technologies Ltd.
               </div>
               <div className="text-[11px] font-mono text-ink-faint">
-                Enforceable in the High Court Division under ICT Act 2006 Section 7 &amp; Evidence Act 1872.
+                SHA-256 Merkle hash chain guarantees document integrity. Enforceable under ICT Act 2006 Section 7 &amp; Evidence Act 1872.
               </div>
             </div>
 

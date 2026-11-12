@@ -65,7 +65,7 @@ export default function SignVoidedPage() {
               This Envelope Was Voided by the Sender
             </h1>
             <p className="text-xs text-ink-soft max-w-md mx-auto">
-              The initiator has cancelled this execution workflow. All pending signature nonces have been revoked with CCA Bangladesh registry.
+              The initiator has cancelled this execution workflow. All pending signature tokens have been revoked.
             </p>
           </div>
 
@@ -132,7 +132,7 @@ export default function SignVoidedPage() {
 
       {/* Footer */}
       <div className="max-w-3xl mx-auto w-full text-center text-[11px] font-mono text-ink-faint border-t border-border pt-4">
-        SignDesk Bangladesh PKI Network • Audit Proof #VOID-BD-2024-8849
+        SignDesk Sovereign Cloud • Audit Proof #VOID-BD-2024-8849
       </div>
     </div>
   );

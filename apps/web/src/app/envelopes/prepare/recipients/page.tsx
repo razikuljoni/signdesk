@@ -70,7 +70,6 @@ function RecipientsPageContent() {
   );
   const [expiryDays, setExpiryDays] = useState('14');
   const [remind48, setRemind48] = useState(true);
-  const [whatsappDispatch, setWhatsappDispatch] = useState(true);
   const [smtpDispatch, setSmtpDispatch] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
@@ -451,15 +450,6 @@ function RecipientsPageContent() {
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={whatsappDispatch}
-                    onChange={(e) => setWhatsappDispatch(e.target.checked)}
-                    className="w-4 h-4 rounded border-border text-pine-600"
-                  />
-                  <span>WhatsApp Business Deep-Link Dispatch</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
                     checked={smtpDispatch}
                     onChange={(e) => setSmtpDispatch(e.target.checked)}
                     className="w-4 h-4 rounded border-border text-pine-600"
@@ -576,7 +566,7 @@ function RecipientsPageContent() {
 
       {/* Global Legal Bottom Bar */}
       <div className="text-center text-[11px] text-ink-faint font-mono pt-4 border-t border-border">
-        PKI Vault 256-Bit Cryptographic Sealing • Statutory Electronic Execution under Bangladesh ICT Act 2006
+        Tamper-Evident SHA-256 Audit Sealing • Statutory Electronic Execution under Bangladesh ICT Act 2006
       </div>
     </div>
   );
