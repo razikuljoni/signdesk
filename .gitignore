@@ -15,3 +15,5 @@ storage/uploads
 storage/completed
 .vercel
 .env*
+test-results/
+playwright-report/

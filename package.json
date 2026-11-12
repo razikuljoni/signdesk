@@ -11,6 +11,7 @@
     "test": "pnpm --recursive run test",
     "test:unit": "pnpm --filter @signdesk/shared test && pnpm --filter @signdesk/api test:unit",
     "test:api": "pnpm --filter @signdesk/api test:e2e",
+    "test:e2e": "pnpm --filter @signdesk/web test:e2e",
     "db:migrate": "pnpm --filter @signdesk/api db:migrate",
     "db:seed": "pnpm --filter @signdesk/api db:seed"
   },
