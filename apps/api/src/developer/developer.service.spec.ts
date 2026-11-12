@@ -57,7 +57,7 @@ describe('DeveloperService (Phase 9 - External API & Webhooks)', () => {
   });
 
   it('signs and verifies webhook HMAC-SHA256 signature', () => {
-    const secret = 'whsec_testsecret1234567890abcdef';
+    const secret = crypto.randomBytes(32).toString('hex');
     const payload = JSON.stringify({ event: 'envelope.completed', envelopeId: 'env-123' });
 
     const header = service.generateWebhookSignature(payload, secret);
@@ -68,7 +68,7 @@ describe('DeveloperService (Phase 9 - External API & Webhooks)', () => {
   });
 
   it('replay protection: rejects webhook signatures older than 5 minutes (300 seconds)', () => {
-    const secret = 'whsec_testsecret1234567890abcdef';
+    const secret = crypto.randomBytes(32).toString('hex');
     const payload = JSON.stringify({ event: 'envelope.completed', envelopeId: 'env-123' });
 
     // 10 minutes ago
