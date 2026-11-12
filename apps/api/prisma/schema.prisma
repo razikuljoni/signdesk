@@ -242,23 +242,25 @@ model ApiKey {
 }
 
 model WebhookEndpoint {
-  id          String            @id @default(uuid())
-  workspaceId String
-  workspace   Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  url         String
-  secretHash  String
-  events      Json              // array of subscribed events
-  enabled     Boolean           @default(true)
-  createdAt   DateTime          @default(now())
-  deliveries  WebhookDelivery[]
+  id                  String            @id @default(uuid())
+  workspaceId         String
+  workspace           Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  url                 String
+  secretHash          String
+  secretEncrypted     String?
+  events              Json              // array of subscribed events
+  enabled             Boolean           @default(true)
+  consecutiveFailures Int               @default(0)
+  createdAt           DateTime          @default(now())
+  deliveries          WebhookDelivery[]
 }
 
 model WebhookDelivery {
   id          String                @id @default(uuid())
   endpointId  String
   endpoint    WebhookEndpoint       @relation(fields: [endpointId], references: [id], onDelete: Cascade)
-  envelopeId  String
-  envelope    Envelope              @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
+  envelopeId  String?
+  envelope    Envelope?             @relation(fields: [envelopeId], references: [id], onDelete: Cascade)
   event       String
   payload     Json
   statusCode  Int?
